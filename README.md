@@ -1,22 +1,26 @@
 # CSD Assignment 1 – Phase 2: Pond Catchment Analysis Backend
 
 ## Project Overview
-This project provides a full-stack solution to analyze topographic contour maps (in KML/KMZ format), identify suitable locations for a water catchment pond, and calculate the contributing catchment area dynamically without hard-coding any values.
+This project provides a full-stack solution to analyze topographic contour maps (in KML/KMZ format), identify suitable LAND locations for a water catchment pond, and calculate the contributing catchment area dynamically without hard-coding any values. 
+
+**Important:** The system does NOT simply select the lowest point on the map or place the pond directly on the strongest drainage channel (e.g., a river/stream bed). Instead, it uses a multi-factor suitability scoring system to find an ideal land location adjacent to drainage pathways that has excellent water-retention and upstream catchment potential.
 
 ## Features
 - Parses arbitrary KML/KMZ files to extract contour geometries and elevation data.
 - Constructs a Digital Elevation Model (DEM) via Triangulated Irregular Network (TIN) interpolation.
 - Calculates D8 Flow Direction and Flow Accumulation to trace water movement.
-- Autonomously selects the best pond candidate based on multi-criteria topographic characteristics (flow accumulation, local depression relief, terrain convergence).
-- Delineates the exact upstream catchment polygon and calculates the area in square meters, hectares, and square kilometers.
+- **Multi-candidate pond selection** with **drainage-channel avoidance**.
+- **Suitability scoring** based on elevation, slope, local depression, terrain convergence, and catchment potential.
+- **Configurable scoring weights** for tuning across different contour maps.
+- **Catchment estimation using D8** flow routing (upstream trace) to delineate the exact upstream catchment polygon and calculate its area.
 - Persists all analyses to MongoDB.
 - Provides a responsive React frontend with interactive Leaflet map rendering.
 
 ## Technology Stack
-- **Frontend**: React, Vite, Leaflet, React-Leaflet
-- **Backend**: Node.js, Express.js, Multer
-- **Database**: MongoDB, Mongoose
-- **Geospatial Processing**: Turf.js, xmldom (XML parsing), AdmZip (KMZ extraction)
+- **Frontend**: React, Vite, Leaflet, React-Leaflet, Axios, Lucide React
+- **Backend**: Node.js, Express.js, Multer, Morgan
+- **Database**: MongoDB (Atlas), Mongoose
+- **Geospatial Processing**: Turf.js, @xmldom/xmldom (XML parsing), adm-zip (KMZ extraction)
 
 ## Architecture & Folder Structure
 ```text
@@ -67,10 +71,13 @@ CSD_assignment/
 
 ### Prerequisites
 - Node.js v18+ 
-- MongoDB (running locally on port 27017, or set `MONGODB_URI` to a cluster URL)
+- A MongoDB cluster (e.g., MongoDB Atlas)
 
 ### 1. MongoDB Setup
-Ensure MongoDB is running locally. No manual database creation is required; Mongoose will create `pond_catchment` automatically on first insert.
+This project uses MongoDB Atlas. 
+1. Create a free cluster on MongoDB Atlas.
+2. Obtain your connection string.
+3. Replace `<username>` and `<password>` in your connection string.
 
 ### 2. Backend Setup
 ```bash
@@ -78,6 +85,7 @@ cd server
 npm install
 # Create a .env file based on .env.example
 cp .env.example .env
+# Edit .env and set MONGODB_URI to your Atlas connection string
 npm run dev
 ```
 The server will run on `http://localhost:5000`
@@ -88,7 +96,7 @@ cd client
 npm install
 npm run dev
 ```
-The client will run on `http://localhost:5173`
+The client will run on `http://localhost:5173` or `http://localhost:5174` (check the console output).
 
 ---
 
@@ -119,7 +127,6 @@ curl -X POST http://localhost:5000/api/analyze-contour -F "file=@contours_1m.kml
     "maxElevation": 298,
     "contourCount": 1355,
     "contourInterval": 1,
-    "uniqueElevations": 32,
     "bounds": {
       "minLng": 81.2814044952393,
       "maxLng": 81.3126468658447,
@@ -128,15 +135,25 @@ curl -X POST http://localhost:5000/api/analyze-contour -F "file=@contours_1m.kml
     }
   },
   "pondSite": {
-    "latitude": 21.24978094896917,
-    "longitude": 81.29019141197207,
-    "elevation": 267.11,
-    "reason": "Selected based on: high drainage convergence (flow accumulation: 75); surrounded by higher terrain (100% of neighbors higher); local depression (2.96m below average neighbor elevation); located in lower portion of terrain"
+    "latitude": 21.261496837946193,
+    "longitude": 81.28706717491153,
+    "elevation": 274.34,
+    "reason": "Land site selected: ~236m offset from the main drainage channel (avoids stream/river); natural depression (3.10m below surrounding terrain); low slope (suitable for pond construction); terrain convergence (100% of neighbors higher); upstream catchment contributing area (flow accumulation: 23); located in lower portion of terrain.",
+    "suitabilityScore": 0.8991,
+    "scoreBreakdown": {
+      "elevation": 0.7631,
+      "slope": 0.8417,
+      "depression": 0.999,
+      "convergence": 1,
+      "catchment": 0.7338,
+      "channelOffset": 1
+    },
+    "distanceToChannelMeters": 235.87
   },
   "catchment": {
-    "areaSquareMeters": 131812.87,
-    "areaHectares": 13.1813,
-    "areaSquareKilometers": 0.1318,
+    "areaSquareMeters": 40419.71,
+    "areaHectares": 4.042,
+    "areaSquareKilometers": 0.0404,
     "polygon": {
       "type": "Polygon",
       "coordinates": [ /* ... GeoJSON Polygon ... */ ]
@@ -162,12 +179,17 @@ The parser extracts `<Placemark>` geometries. For `<LineString>` elements, it se
 A grid (approx. ~40-50m cell size) is overlaid on the bounding box of the contour map. Points are sampled from the contours to build a Triangulated Irregular Network (TIN). Elevation for each cell is calculated using barycentric interpolation. D8 (Deterministic 8-Node) Flow Direction is then calculated, determining the steepest descent for each grid cell. Finally, Flow Accumulation is generated via a topological sort algorithm (highest to lowest elevation).
 
 ### 3. Pond Site Selection Methodology
-The pond site is **not** simply the lowest point on the map. Instead, cells are scored against multiple criteria:
-- **Drainage convergence:** High flow accumulation.
-- **Topographic convergence:** High percentage of adjacent cells with higher elevations.
-- **Local Relief:** Degree of concavity (how much lower the cell is compared to average neighbor elevation).
-- **Position:** Preference for lower relative terrain elevations overall.
-The highest scoring cell is returned alongside backup candidate sites.
+The pond site is **not** simply the lowest point on the map or the point with the absolute highest flow accumulation (which would incorrectly place it on a river). Instead, it uses a multi-factor suitability scoring system with explicit drainage-channel avoidance.
+
+Cells are scored against the following configurable criteria:
+- **Distance from drainage channel (Channel Offset Penalty)**: Strongly prefers land locations adequately offset from the main drainage system.
+- **Local Depression**: Preference for natural "terrain bowls" (areas deeper than their 5x5 neighbors).
+- **Slope**: Low gradient / flat areas suitable for construction.
+- **Flow Accumulation**: Ensures there is sufficient upstream catchment potential without selecting the main riverbed.
+- **Terrain Convergence**: The fraction of immediate neighboring cells that are higher.
+- **Elevation**: Preference for lower relative terrain elevations overall.
+
+Multiple candidates are evaluated, and the highest-scoring spatially distinct cell is chosen alongside backup candidate sites.
 
 ### 4. Catchment Estimation Methodology
 Starting from the selected pond site (the "pour point"), a Breadth-First Search (BFS) operates backwards on the D8 flow direction grid. It aggregates all grid cells whose simulated runoff pathways ultimately arrive at the pond cell. These cells are converted into a unified GeoJSON polygon via a union operation, and the total geodesic surface area is calculated dynamically using Turf.js.
@@ -204,4 +226,3 @@ git push -u origin main
    - Deploy the `client/` directory as a Static Site.
    - Set environment variables: `VITE_API_URL=<your-deployed-backend-url>/api`.
    - Set build command to `npm run build` and output directory to `dist`.
-# CSD-ASSIGNMENT-1
