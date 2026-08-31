@@ -55,7 +55,9 @@ async function analyzeContour(req, res, next) {
         contourInterval: result.terrain.contourInterval,
         bounds: result.terrain.bounds
       },
-      pondSite: result.pondSite,
+      pondSite: {
+        ...result.pondSite
+      },
       catchment: {
         areaSquareMeters: result.catchment.areaSquareMeters,
         areaHectares: result.catchment.areaHectares,

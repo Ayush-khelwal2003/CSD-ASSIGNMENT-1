@@ -84,14 +84,20 @@ async function runAnalysis(fileBuffer, filename) {
       latitude: pondSite.latitude,
       longitude: pondSite.longitude,
       elevation: pondSite.elevation,
-      reason: pondSite.reason
+      reason: pondSite.reason,
+      suitabilityScore: pondSite.suitabilityScore,
+      scoreBreakdown: pondSite.scoreBreakdown,
+      distanceToChannelMeters: pondSite.distanceToChannelMeters
     },
     candidates: candidates.map(c => ({
       latitude: c.latitude,
       longitude: c.longitude,
       elevation: c.elevation,
       reason: c.reason,
-      score: c.score
+      score: c.score,
+      suitabilityScore: c.suitabilityScore,
+      scoreBreakdown: c.scoreBreakdown,
+      distanceToChannelMeters: c.distanceToChannelMeters
     })),
     catchment: {
       areaSquareMeters: catchmentResult.areaSquareMeters,

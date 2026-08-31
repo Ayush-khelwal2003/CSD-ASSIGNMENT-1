@@ -31,7 +31,10 @@ const analysisSchema = new mongoose.Schema({
     latitude: Number,
     longitude: Number,
     elevation: Number,
-    reason: String
+    reason: String,
+    suitabilityScore: Number,
+    scoreBreakdown: mongoose.Schema.Types.Mixed,
+    distanceToChannelMeters: Number
   },
   catchment: {
     areaSquareMeters: Number,
