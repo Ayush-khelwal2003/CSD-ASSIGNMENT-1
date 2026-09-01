@@ -5,6 +5,12 @@ node_modules/
 .env
 client/.env
 server/.env
+python_server/.env
+
+# Python cache & venv
+__pycache__/
+*.pyc
+python_server/venv/
 
 # Data files (large KML/KMZ contour maps)
 *.kml
