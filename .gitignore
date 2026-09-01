@@ -3,6 +3,12 @@ node_modules/
 
 # Environment
 .env
+client/.env
+server/.env
+
+# Data files (large KML/KMZ contour maps)
+*.kml
+*.kmz
 
 # Uploads
 server/uploads/

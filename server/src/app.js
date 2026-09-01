@@ -10,9 +10,9 @@ const app = express();
 // Security middleware
 app.use(helmet());
 
-// CORS
+// CORS - allow CLIENT_URL or all origins for public API access
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: process.env.CLIENT_URL || '*',
   credentials: true
 }));
 

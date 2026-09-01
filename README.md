@@ -203,26 +203,52 @@ Starting from the selected pond site (the "pour point"), a Breadth-First Search 
 
 ---
 
-## Deployment & GitHub Instructions
+## Deployment
 
-### GitHub Commands
-Ensure you do not commit `node_modules`, `.env`, or heavy raw data files unless required.
+### Backend Deployment on Render
+
+1. **Create a new Web Service** on [Render](https://render.com).
+2. **Connect your GitHub repository**: `Ayush-khelwal2003/CSD-ASSIGNMENT-1`
+3. **Configure the service** with these exact settings:
+
+| Setting          | Value                |
+|------------------|----------------------|
+| **Root Directory** | `server`           |
+| **Build Command**  | `npm install`      |
+| **Start Command**  | `node src/server.js` |
+
+4. **Set Environment Variables** on Render:
+
+| Variable       | Value                                      |
+|----------------|--------------------------------------------|
+| `PORT`         | (Render sets this automatically)            |
+| `MONGODB_URI`  | Your MongoDB Atlas connection string        |
+| `NODE_ENV`     | `production`                                |
+| `CLIENT_URL`   | Your frontend URL (optional, defaults to `*`) |
+
+5. **Deploy** — Render will run `npm install` and start the server automatically.
+
+### API Routes (Available After Deployment)
+
+| Method | Route                  | Description                          |
+|--------|------------------------|--------------------------------------|
+| GET    | `/api/health`          | Health check (server + DB status)    |
+| POST   | `/api/analyze-contour` | Upload and analyze a KML/KMZ file    |
+| GET    | `/api/analyses`        | List all previous analyses           |
+
+### Frontend Deployment (Optional)
+
+1. Deploy the `client/` directory as a **Static Site** on Render.
+2. Set environment variable: `VITE_API_URL=<your-deployed-backend-url>/api`
+3. Build command: `npm run build`, output directory: `dist`.
+
+---
+
+## GitHub Commands
+
 ```bash
-git init
 git add .
-git commit -m "Initial commit: Full-stack Pond Catchment Analysis"
-git branch -M main
-git remote add origin <your-repo-url>
-git push -u origin main
+git commit -m "Prepare backend for Render deployment"
+git push origin main
 ```
 
-### Deployment Steps (e.g. Render / Railway)
-1. **Database:** Deploy a MongoDB cluster using MongoDB Atlas (free tier) and obtain the Connection string.
-2. **Backend:** 
-   - Deploy the `server/` directory as a Node Web Service.
-   - Set environment variables: `PORT=5000` and `MONGODB_URI=<your-atlas-uri>`.
-   - Set start command to `node src/server.js`.
-3. **Frontend:**
-   - Deploy the `client/` directory as a Static Site.
-   - Set environment variables: `VITE_API_URL=<your-deployed-backend-url>/api`.
-   - Set build command to `npm run build` and output directory to `dist`.

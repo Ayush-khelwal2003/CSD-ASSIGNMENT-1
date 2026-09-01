@@ -10,9 +10,10 @@ async function startServer() {
     await mongoose.connect(MONGODB_URI);
     console.log('✅ Connected to MongoDB');
 
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running on http://localhost:${PORT}`);
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📡 Health check: http://localhost:${PORT}/api/health`);
+      console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error.message);
