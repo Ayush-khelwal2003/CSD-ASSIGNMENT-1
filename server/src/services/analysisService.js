@@ -36,7 +36,7 @@ async function runAnalysis(fileBuffer, filename) {
 
   // Step 2: Build terrain model
   console.log('\n[2/4] Building terrain model...');
-  const terrainModel = buildTerrainModel(features, metadata, 40);
+  const terrainModel = buildTerrainModel(features, metadata, 25);
   console.log(`  Grid: ${terrainModel.nRows}×${terrainModel.nCols}`);
 
   // Step 3: Select pond site
