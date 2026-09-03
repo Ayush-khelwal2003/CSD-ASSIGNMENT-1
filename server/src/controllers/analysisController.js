@@ -21,7 +21,7 @@ async function analyzeContour(req, res, next) {
         success: false,
         error: {
           code: 'MISSING_FILE',
-          message: 'No file uploaded. Please upload a KML or KMZ file using the "file" field.'
+          message: 'No file uploaded. Please upload a KML or KMZ file using the "contour_map" field.'
         }
       });
     }

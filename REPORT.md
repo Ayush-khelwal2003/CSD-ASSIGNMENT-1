@@ -20,7 +20,7 @@ The solution provides a generalized, highly extensible, and high-performance bac
 - **URL**: `http://10.1.75.51:5278/api/analyze-contour`
 - **Method**: `POST`
 - **Content-Type**: `multipart/form-data`
-- **Form Data Field**: `file` (accepts `.kml` or `.kmz`)
+- **Form Data Field**: `contour_map` (accepts `.kml` or `.kmz`)
 - **Response Format**: `application/json`
 
 ---
@@ -34,7 +34,7 @@ Host: 10.1.75.51:5278
 Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
 
 ------WebKitFormBoundary
-Content-Disposition: form-data; name="file"; filename="contours_1m.kml"
+Content-Disposition: form-data; name="contour_map"; filename="contours_1m.kml"
 Content-Type: application/vnd.google-earth.kml+xml
 
 <Binary KML/KMZ File Data>
@@ -57,7 +57,7 @@ Content-Type: application/vnd.google-earth.kml+xml
 #### Sample cURL Request:
 ```bash
 curl -X POST http://10.1.75.51:5278/api/analyze-contour \
-  -F "file=@contours_1m.kml"
+  -F "contour_map=@contours_1m.kml"
 ```
 
 #### Truncated Sample JSON Response:

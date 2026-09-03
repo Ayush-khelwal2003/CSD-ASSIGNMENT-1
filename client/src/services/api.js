@@ -8,7 +8,7 @@ const api = axios.create({
 
 export const analyzeContour = async (file) => {
   const formData = new FormData();
-  formData.append('file', file);
+  formData.append('contour_map', file);
 
   const response = await api.post('/analyze-contour', formData, {
     headers: {

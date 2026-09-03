@@ -12,7 +12,7 @@ const {
 router.get('/health', healthCheck);
 
 // Analyze contour file
-router.post('/analyze-contour', upload.single('file'), analyzeContour);
+router.post('/analyze-contour', upload.single('contour_map'), analyzeContour);
 
 // List all analyses
 router.get('/analyses', getAnalyses);

@@ -42,10 +42,10 @@ GET /api/health
 POST /api/analyze-contour
 ```
 - **Content-Type**: `multipart/form-data`
-- **Field Name**: `file` (accepts `.kml` or `.kmz`)
+- **Field Name**: `contour_map` (accepts `.kml` or `.kmz`)
 
 #### Example Curl:
 ```bash
 curl -X POST http://<HOST_IP>:<PORT>/api/analyze-contour \
-  -F "file=@contours_1m.kml"
+  -F "contour_map=@contours_1m.kml"
 ```
