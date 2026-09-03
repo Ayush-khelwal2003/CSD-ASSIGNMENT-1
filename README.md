@@ -111,15 +111,15 @@ Analyzes a KML or KMZ contour map.
 
 **Exact curl Command (for testing):**
 ```bash
-curl -X POST http://localhost:5000/api/analyze-contour -F "contour_map=@contours_1m.kml"
+curl -X POST http://localhost:5000/api/analyze-contour -F "contour_map=@contour_map.kml"
 ```
 
-**Example API Response (Generated dynamically from contours_1m.kml):**
+**Example API Response (Generated dynamically from contour_map.kml):**
 ```json
 {
   "success": true,
   "input": {
-    "filename": "contours_1m.kml",
+    "filename": "contour_map.kml",
     "format": "KML"
   },
   "terrain": {

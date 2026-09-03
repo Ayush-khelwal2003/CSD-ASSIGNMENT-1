@@ -47,5 +47,5 @@ POST /api/analyze-contour
 #### Example Curl:
 ```bash
 curl -X POST http://<HOST_IP>:<PORT>/api/analyze-contour \
-  -F "contour_map=@contours_1m.kml"
+  -F "contour_map=@contour_map.kml"
 ```

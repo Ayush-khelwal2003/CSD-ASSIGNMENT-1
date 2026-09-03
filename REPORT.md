@@ -34,7 +34,7 @@ Host: 10.1.75.51:5278
 Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
 
 ------WebKitFormBoundary
-Content-Disposition: form-data; name="contour_map"; filename="contours_1m.kml"
+Content-Disposition: form-data; name="contour_map"; filename="contour_map.kml"
 Content-Type: application/vnd.google-earth.kml+xml
 
 <Binary KML/KMZ File Data>
@@ -52,12 +52,12 @@ Content-Type: application/vnd.google-earth.kml+xml
 
 ---
 
-### 2.3 Demonstration using Provided Sample Contour Map (`contours_1m.kml`)
+### 2.3 Demonstration using Provided Sample Contour Map (`contour_map.kml`)
 
 #### Sample cURL Request:
 ```bash
 curl -X POST http://10.1.75.51:5278/api/analyze-contour \
-  -F "contour_map=@contours_1m.kml"
+  -F "contour_map=@contour_map.kml"
 ```
 
 #### Truncated Sample JSON Response:
@@ -66,7 +66,7 @@ curl -X POST http://10.1.75.51:5278/api/analyze-contour \
   "success": true,
   "message": "Contour analysis completed successfully",
   "analysisId": "f6956fe5-4f4c-4022-9d33-c5924d3ee6c3",
-  "filename": "contours_1m.kml",
+  "filename": "contour_map.kml",
   "processingTimeMs": 875,
   "metadata": {
     "contourCount": 1355,
