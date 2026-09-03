@@ -34,20 +34,20 @@ def health_check():
     }
 
 @app.post("/api/analyze-contour")
-async def analyze_contour(file: UploadFile = File(...)):
-    if not file.filename:
+async def analyze_contour(contour_map: UploadFile = File(...)):
+    if not contour_map.filename:
         raise HTTPException(status_code=400, detail="No file uploaded")
     
-    ext = file.filename.lower().split(".")[-1]
+    ext = contour_map.filename.lower().split(".")[-1]
     if ext not in ["kml", "kmz"]:
         raise HTTPException(status_code=400, detail="Invalid file type. Please upload a .kml or .kmz file")
 
     start_time = time.time()
-    file_bytes = await file.read()
+    file_bytes = await contour_map.read()
 
     try:
         # Step 1: Parse KML/KMZ
-        parsed = parse_contour_file(file_bytes, file.filename)
+        parsed = parse_contour_file(file_bytes, contour_map.filename)
         features = parsed["features"]
         metadata = parsed["metadata"]
 
@@ -67,7 +67,7 @@ async def analyze_contour(file: UploadFile = File(...)):
         # Format Response
         analysis_data = {
             "analysisId": str(uuid.uuid4()),
-            "filename": file.filename,
+            "filename": contour_map.filename,
             "createdAt": datetime.utcnow().isoformat(),
             "processingTimeMs": processing_time_ms,
             "metadata": metadata,
