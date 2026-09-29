@@ -25,6 +25,7 @@ function App() {
   const [isSelectingArea, setIsSelectingArea] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [backendStatus, setBackendStatus] = useState('checking'); // 'online' | 'offline' | 'checking'
+  const [activeCandidateId, setActiveCandidateId] = useState(null);
 
   // Check backend health periodically
   useEffect(() => {
@@ -46,10 +47,16 @@ function App() {
       setLoading(true);
       setError(null);
       setResult(null);
+      setActiveCandidateId(null);
 
       const data = await analyzeContour(file, area, rainfall, runoff);
       if (data && data.success) {
         setResult(data);
+        if (data.candidates && data.candidates.length > 0) {
+          setActiveCandidateId(data.candidates[0].id);
+        } else if (data.pondSite) {
+          setActiveCandidateId(data.pondSite.id || 'candidate-1');
+        }
       } else {
         throw new Error(data?.message || 'Analysis did not return successful data');
       }
@@ -64,11 +71,18 @@ function App() {
   const handleReset = () => {
     setResult(null);
     setError(null);
+    setActiveCandidateId(null);
   };
 
   const handleClearSelection = () => {
     setSelectedArea(null);
     setIsSelectingArea(false);
+  };
+
+  const handleSelectCandidate = (cand) => {
+    if (cand && cand.id) {
+      setActiveCandidateId(cand.id);
+    }
   };
 
   return (
@@ -151,6 +165,8 @@ function App() {
               loading={loading} 
               error={error} 
               onReset={handleReset} 
+              activeCandidateId={activeCandidateId}
+              onSelectCandidate={handleSelectCandidate}
             />
           )}
         </aside>
@@ -167,6 +183,8 @@ function App() {
             isSelectingArea={isSelectingArea}
             setIsSelectingArea={setIsSelectingArea}
             onClearSelection={handleClearSelection}
+            activeCandidateId={activeCandidateId}
+            onSelectCandidate={handleSelectCandidate}
           />
         </section>
       </main>
@@ -179,6 +197,9 @@ function App() {
           setResult(histItem);
           if (histItem.selectedArea) {
             setSelectedArea(histItem.selectedArea);
+          }
+          if (histItem.candidates && histItem.candidates.length > 0) {
+            setActiveCandidateId(histItem.candidates[0].id);
           }
         }}
       />

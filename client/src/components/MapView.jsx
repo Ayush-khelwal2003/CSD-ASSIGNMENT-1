@@ -12,7 +12,9 @@ import {
   Droplet, 
   HelpCircle,
   Eye,
-  EyeOff
+  EyeOff,
+  Award,
+  Sparkles
 } from 'lucide-react';
 
 // Fix Leaflet marker icons in Vite/React bundling
@@ -23,41 +25,47 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Custom glowing pin for optimal pond site
-const pondIcon = new L.DivIcon({
-  className: 'custom-pond-marker-container',
-  html: `
-    <div class="pond-marker-pulse"></div>
-    <div class="pond-marker-pin">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" fill="#38bdf8"/>
-      </svg>
-    </div>
-  `,
-  iconSize: [36, 36],
-  iconAnchor: [18, 36],
-  popupAnchor: [0, -38]
-});
+// Dynamic Ranked Candidate Marker Icon Generator
+const createCandidateIcon = (rank, isRecommended = false, isActive = false) => {
+  if (isRecommended || rank === 1) {
+    return new L.DivIcon({
+      className: `custom-pond-marker-container ${isActive ? 'focused-marker' : ''}`,
+      html: `
+        <div class="pond-marker-pulse"></div>
+        <div class="pond-marker-pin rank-primary">
+          <div class="rank-number">#1</div>
+        </div>
+      `,
+      iconSize: [38, 38],
+      iconAnchor: [19, 38],
+      popupAnchor: [0, -40]
+    });
+  }
 
-// Alternate candidate pond sites icon
-const candidateIcon = new L.DivIcon({
-  className: 'custom-candidate-marker',
-  html: `
-    <div class="candidate-marker-pin">
-      <div class="candidate-dot"></div>
-    </div>
-  `,
-  iconSize: [22, 22],
-  iconAnchor: [11, 22],
-  popupAnchor: [0, -22]
-});
+  return new L.DivIcon({
+    className: `custom-candidate-marker ${isActive ? 'focused-marker' : ''}`,
+    html: `
+      <div class="candidate-marker-pin rank-alt">
+        <span class="cand-rank-num">#${rank}</span>
+      </div>
+    `,
+    iconSize: [28, 28],
+    iconAnchor: [14, 28],
+    popupAnchor: [0, -28]
+  });
+};
 
-// Bounds and zoom manager
-const MapController = ({ bounds, selectedArea }) => {
+// Bounds, Zoom, and Active Site Manager
+const MapController = ({ bounds, selectedArea, activeCandidate }) => {
   const map = useMap();
 
   useEffect(() => {
-    if (bounds) {
+    if (activeCandidate && activeCandidate.latitude && activeCandidate.longitude) {
+      map.flyTo([activeCandidate.latitude, activeCandidate.longitude], Math.max(map.getZoom(), 15), {
+        animate: true,
+        duration: 0.8
+      });
+    } else if (bounds) {
       const b = L.latLngBounds(
         L.latLng(bounds.minLat, bounds.minLng),
         L.latLng(bounds.maxLat, bounds.maxLng)
@@ -70,7 +78,7 @@ const MapController = ({ bounds, selectedArea }) => {
       );
       map.fitBounds(b, { padding: [40, 40], maxZoom: 16 });
     }
-  }, [bounds, selectedArea, map]);
+  }, [bounds, selectedArea, activeCandidate, map]);
 
   return null;
 };
@@ -148,7 +156,9 @@ const MapView = ({
   onAreaSelected,
   isSelectingArea,
   setIsSelectingArea,
-  onClearSelection
+  onClearSelection,
+  activeCandidateId,
+  onSelectCandidate
 }) => {
   const [basemap, setBasemap] = useState('dark');
   const [showContours, setShowContours] = useState(true);
@@ -207,6 +217,13 @@ const MapView = ({
     dashArray: '4, 2'
   };
 
+  // Candidates list
+  const candidates = result?.candidates && result.candidates.length > 0 
+    ? result.candidates 
+    : (result?.pondSite ? [result.pondSite] : []);
+
+  const activeCandidate = candidates.find(c => c.id === activeCandidateId);
+
   return (
     <div className={`map-wrapper ${isSelectingArea ? 'drawing-mode' : ''}`}>
       {/* Top Map Action Toolbar */}
@@ -250,6 +267,13 @@ const MapView = ({
               >
                 {showCatchment ? <Eye size={14} /> : <EyeOff size={14} />} Catchment
               </button>
+              <button 
+                className={`layer-toggle-btn ${showCandidates ? 'active' : ''}`}
+                onClick={() => setShowCandidates(!showCandidates)}
+                title="Toggle Candidate Sites"
+              >
+                {showCandidates ? <Eye size={14} /> : <EyeOff size={14} />} Sites ({candidates.length})
+              </button>
             </div>
           )}
 
@@ -290,6 +314,7 @@ const MapView = ({
           <MapController 
             bounds={result?.terrain?.bounds} 
             selectedArea={selectedArea}
+            activeCandidate={activeCandidate}
           />
 
           {/* Drawing Handler */}
@@ -349,119 +374,115 @@ const MapView = ({
               onEachFeature={(feature, layer) => {
                 layer.bindPopup(`
                   <div class="custom-map-popup">
-                    <h4 style="color:#10b981">Delineated Catchment Basin</h4>
-                    <p>Area: <strong>${result.catchment.areaHectares.toFixed(2)} ha</strong> (${result.catchment.areaSquareMeters.toLocaleString()} m²)</p>
-                    <p style="color:#94a3b8;font-size:11px">Upstream runoff watershed calculated via D8 flow direction</p>
+                    <h4 style={{ color: '#10b981' }}>Delineated Catchment Basin</h4>
+                    <p>Area: <strong>{result.catchment.areaHectares.toFixed(2)} ha</strong> ({result.catchment.areaSquareMeters.toLocaleString()} m²)</p>
+                    <p style={{ color: '#94a3b8', fontSize: '11px' }}>Upstream runoff watershed calculated via D8 flow direction</p>
                   </div>
                 `);
               }}
             />
           )}
 
-          {/* Alternate Candidate Pond Sites */}
-          {result && result.candidates && showCandidates && result.candidates.map((cand, idx) => (
-            <Marker
-              key={`candidate-${idx}`}
-              position={[cand.latitude, cand.longitude]}
-              icon={candidateIcon}
-            >
-              <Popup>
-                <div className="custom-map-popup">
-                  <h4 style={{ color: '#94a3b8' }}>Alternate Pond Site #{idx + 2}</h4>
-                  <p>Suitability: <strong>{(cand.suitabilityScore * 100).toFixed(1)}%</strong></p>
-                  <p>Elevation: <strong>{cand.elevation.toFixed(1)}m</strong></p>
-                  <p style={{ color: '#94a3b8', fontSize: '11px' }}>{cand.reason}</p>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
+          {/* Multiple Candidate Pond Sites Pins */}
+          {result && showCandidates && candidates.map((cand, idx) => {
+            const isRank1 = (cand.rank === 1) || (!cand.rank && idx === 0);
+            const isActive = cand.id === activeCandidateId || (isRank1 && !activeCandidateId);
+            const icon = createCandidateIcon(cand.rank || idx + 1, isRank1, isActive);
 
-          {/* Selected Optimal Pond Site Marker */}
-          {result && result.pondSite && (
-            <Marker
-              position={[result.pondSite.latitude, result.pondSite.longitude]}
-              icon={pondIcon}
-            >
-              <Popup autoPan={true} className="optimal-pond-popup">
-                <div className="custom-map-popup">
-                  <div className="popup-badge">Optimal Siting</div>
-                  <h4 style={{ color: '#38bdf8', fontSize: '1rem', marginTop: '4px' }}>Suggested Village Pond Location</h4>
-                  
-                  <div className="popup-grid">
-                    <div className="popup-stat">
-                      <span className="lbl">Latitude:</span>
-                      <span className="val">{result.pondSite.latitude.toFixed(6)}°N</span>
+            return (
+              <Marker
+                key={cand.id || `candidate-${idx}`}
+                position={[cand.latitude, cand.longitude]}
+                icon={icon}
+                eventHandlers={{
+                  click: () => {
+                    if (onSelectCandidate) onSelectCandidate(cand);
+                  }
+                }}
+              >
+                <Popup autoPan={true} className={isRank1 ? 'optimal-pond-popup' : 'candidate-pond-popup'}>
+                  <div className="custom-map-popup">
+                    <div className="popup-badge" style={{ background: isRank1 ? 'rgba(56,189,248,0.2)' : 'rgba(251,191,36,0.2)', color: isRank1 ? '#38bdf8' : '#fbbf24' }}>
+                      {isRank1 ? '★ Rank #1 (Recommended Site)' : `Candidate Site #${cand.rank || idx + 1}`}
                     </div>
-                    <div className="popup-stat">
-                      <span className="lbl">Longitude:</span>
-                      <span className="val">{result.pondSite.longitude.toFixed(6)}°E</span>
-                    </div>
-                    <div className="popup-stat">
-                      <span className="lbl">Elevation:</span>
-                      <span className="val">{result.pondSite.elevation.toFixed(1)} m</span>
-                    </div>
-                    <div className="popup-stat highlight">
-                      <span className="lbl">Suitability:</span>
-                      <span className="val">{(result.pondSite.suitabilityScore * 100).toFixed(1)}%</span>
-                    </div>
-                    {result.waterVolume && (
-                      <div className="popup-stat success" style={{ gridColumn: 'span 2' }}>
-                        <span className="lbl">Expected Water Volume:</span>
-                        <span className="val">{result.waterVolume.expectedVolumeM3.toLocaleString()} m³</span>
+                    <h4 style={{ color: isRank1 ? '#38bdf8' : '#fff', fontSize: '0.95rem', marginTop: '4px' }}>
+                      {cand.name || `Pond Site #${cand.rank || idx + 1}`}
+                    </h4>
+                    
+                    <div className="popup-grid">
+                      <div className="popup-stat">
+                        <span className="lbl">Latitude:</span>
+                        <span className="val">{cand.latitude.toFixed(5)}°N</span>
                       </div>
-                    )}
-                    <div className="popup-stat" style={{ gridColumn: 'span 2' }}>
-                      <span className="lbl">Catchment Area:</span>
-                      <span className="val">{result.catchment.areaHectares.toFixed(2)} ha ({result.catchment.areaSquareMeters.toLocaleString()} m²)</span>
+                      <div className="popup-stat">
+                        <span className="lbl">Longitude:</span>
+                        <span className="val">{cand.longitude.toFixed(5)}°E</span>
+                      </div>
+                      <div className="popup-stat">
+                        <span className="lbl">Elevation:</span>
+                        <span className="val">{cand.elevation.toFixed(1)} m</span>
+                      </div>
+                      <div className="popup-stat highlight">
+                        <span className="lbl">Suitability:</span>
+                        <span className="val">{((cand.suitabilityScore || 0.8) * 100).toFixed(1)}%</span>
+                      </div>
+                      {cand.expectedVolumeM3 && (
+                        <div className="popup-stat success" style={{ gridColumn: 'span 2' }}>
+                          <span className="lbl">Expected Inflow Volume:</span>
+                          <span className="val">{cand.expectedVolumeM3.toLocaleString()} m³</span>
+                        </div>
+                      )}
+                      <div className="popup-stat" style={{ gridColumn: 'span 2' }}>
+                        <span className="lbl">Distance to Channel:</span>
+                        <span className="val">~{Math.round(cand.distanceToChannelMeters || 0)} m safe buffer</span>
+                      </div>
+                    </div>
+
+                    <div className="popup-reason">
+                      {cand.reason}
+                    </div>
+
+                    <div style={{ marginTop: '0.6rem', textAlign: 'center' }}>
+                      <button 
+                        className="btn-popup-select"
+                        onClick={() => onSelectCandidate && onSelectCandidate(cand)}
+                      >
+                        Inspect &amp; Compare This Site
+                      </button>
                     </div>
                   </div>
-
-                  <div className="popup-reason">
-                    {result.pondSite.reason}
-                  </div>
-                </div>
-              </Popup>
-            </Marker>
-          )}
+                </Popup>
+              </Marker>
+            );
+          })}
         </MapContainer>
 
         {/* Floating GIS Map Legend */}
         <div className="map-floating-legend">
           <div className="legend-title">GIS Symbology</div>
           <div className="legend-item">
-            <span className="sym-pond"></span>
-            <span>Proposed Pond Site</span>
+            <span className="sym-pond rank-1-sym"></span>
+            <span>Rank #1 Recommended Pond</span>
+          </div>
+          <div className="legend-item">
+            <span className="sym-candidate-pin"></span>
+            <span>Alternate Candidates (#2 - #{candidates.length})</span>
           </div>
           <div className="legend-item">
             <span className="sym-catchment"></span>
-            <span>Catchment Basin (${result?.catchment?.areaHectares ? `${result.catchment.areaHectares.toFixed(1)} ha` : 'Upstream Watershed'})</span>
+            <span>Catchment Basin ({result?.catchment?.areaHectares ? `${result.catchment.areaHectares.toFixed(1)} ha` : 'Upstream Watershed'})</span>
           </div>
           {selectedArea && (
             <div className="legend-item">
               <span className="sym-selection"></span>
-              <span>Target Land Selection</span>
+              <span>Selected Land Parcel ({selectedArea.areaHectares} ha)</span>
             </div>
           )}
           <div className="legend-item">
             <span className="sym-contour"></span>
             <span>Topographic Contours (m)</span>
           </div>
-          {result?.candidates?.length > 0 && (
-            <div className="legend-item">
-              <span className="sym-candidate"></span>
-              <span>Alternate Candidate Sites</span>
-            </div>
-          )}
         </div>
-
-        {/* Placeholder overlay when no data */}
-        {!result && (
-          <div className="map-empty-hint">
-            <MapIcon size={32} style={{ opacity: 0.6, marginBottom: '0.5rem' }} />
-            <h3>Interactive Topographic GIS Viewer</h3>
-            <p>Upload a contour map or click <strong>Select Land Area</strong> above to start spatial hydrological analysis.</p>
-          </div>
-        )}
       </div>
     </div>
   );

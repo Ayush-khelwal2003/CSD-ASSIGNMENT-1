@@ -11,20 +11,32 @@ import {
   Compass, 
   Layers, 
   Sliders, 
-  Sparkles,
-  Info,
-  Clock,
-  ShieldCheck,
-  Check
+  Sparkles, 
+  Info, 
+  Clock, 
+  ShieldCheck, 
+  Check, 
+  Table, 
+  ListFilter, 
+  ArrowUpRight, 
+  Award, 
+  TrendingUp 
 } from 'lucide-react';
 import { recalculateVolume } from '../services/api';
 
-const ResultsPanel = ({ result, loading, error, onReset }) => {
+const ResultsPanel = ({ 
+  result, 
+  loading, 
+  error, 
+  onReset, 
+  activeCandidateId, 
+  onSelectCandidate 
+}) => {
   const [rainfall, setRainfall] = useState(100);
   const [runoff, setRunoff] = useState(0.70);
   const [waterVolume, setWaterVolume] = useState(null);
   const [recalculating, setRecalculating] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'suitability' | 'water'
+  const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'comparison' | 'suitability' | 'water'
 
   useEffect(() => {
     if (result && result.waterVolume) {
@@ -56,14 +68,14 @@ const ResultsPanel = ({ result, loading, error, onReset }) => {
           <div className="radar-sweep"></div>
           <div className="radar-core"></div>
         </div>
-        <div className="loading-title">Analyzing Topography & Hydrology...</div>
+        <div className="loading-title">Analyzing Topography &amp; Hydrology...</div>
         <div className="loading-subtext">
-          Interpolating DEM grid • Tracing D8 drainage flow • Evaluating multi-factor pond suitability • Calculating upstream catchment basin
+          Interpolating DEM grid • Tracing D8 drainage flow • Evaluating multi-factor pond suitability • Generating multiple spatially distinct candidates
         </div>
         <div className="loading-pipeline-steps">
           <div className="pipeline-step done">✓ Parsed Contour Geometry</div>
-          <div className="pipeline-step active">⚡ Computing Flow Accumulation</div>
-          <div className="pipeline-step">Delineating Watershed Polygon</div>
+          <div className="pipeline-step active">⚡ Computing Flow Accumulation &amp; Candidates</div>
+          <div className="pipeline-step">Delineating Watershed Catchments</div>
         </div>
       </div>
     );
@@ -88,14 +100,20 @@ const ResultsPanel = ({ result, loading, error, onReset }) => {
 
   if (!result) return null;
 
-  const site = result.pondSite || {};
+  // Candidates list
+  const candidates = result.candidates && result.candidates.length > 0 
+    ? result.candidates 
+    : (result.pondSite ? [result.pondSite] : []);
+
+  // Find active site (or default to rank 1 / pondSite)
+  const activeCandidate = candidates.find(c => c.id === activeCandidateId) || result.pondSite || candidates[0] || {};
   const catchment = result.catchment || {};
   const terrain = result.terrain || {};
-  const breakdown = site.scoreBreakdown || {};
+  const breakdown = activeCandidate.scoreBreakdown || result.pondSite?.scoreBreakdown || {};
 
   // Formatted reasons
-  const reasonBullets = site.reason 
-    ? site.reason.replace('Optimal pond site selected: ', '').replace('Land site selected: ', '').split('; ')
+  const reasonBullets = activeCandidate.reason 
+    ? activeCandidate.reason.replace('Optimal pond site selected: ', '').replace('Land site selected: ', '').split('; ')
     : ['High composite topographic suitability score', 'Optimal slope gradient for earthen excavation'];
 
   return (
@@ -121,128 +139,121 @@ const ResultsPanel = ({ result, loading, error, onReset }) => {
           Overview
         </button>
         <button 
+          className={`result-tab ${activeTab === 'comparison' ? 'active' : ''}`}
+          onClick={() => setActiveTab('comparison')}
+        >
+          Compare Sites ({candidates.length})
+        </button>
+        <button 
           className={`result-tab ${activeTab === 'suitability' ? 'active' : ''}`}
           onClick={() => setActiveTab('suitability')}
         >
-          Suitability Score
+          Suitability
         </button>
         <button 
           className={`result-tab ${activeTab === 'water' ? 'active' : ''}`}
           onClick={() => setActiveTab('water')}
         >
-          Water Harvesting
+          Water Simulator
         </button>
       </div>
 
       {/* TAB 1: OVERVIEW */}
       {activeTab === 'overview' && (
         <>
-          {/* Card 1: Suggested Pond Location */}
-          <div className="result-card highlight-border">
+          {/* Card 1: Active Suggested Pond Site */}
+          <div className="result-card primary-site-card">
             <div className="card-header">
               <div className="card-title">
-                <Map size={18} style={{ color: '#38bdf8' }} />
-                <span>Suggested Pond Location</span>
+                <MapPin size={18} style={{ color: activeCandidate.isRecommended ? '#38bdf8' : '#fbbf24' }} />
+                <span>{activeCandidate.name || 'Suggested Pond Location'}</span>
               </div>
               <span className="score-pill">
-                {((site.suitabilityScore || site.score || 0.88) * 100).toFixed(1)}% Suitability
+                {((activeCandidate.suitabilityScore || 0.88) * 100).toFixed(1)}% Suitability
               </span>
             </div>
 
             <div className="stats-grid-2x2">
               <div className="stat-card">
                 <span className="stat-label">Latitude</span>
-                <span className="stat-val">{site.latitude?.toFixed(6)}° N</span>
+                <span className="stat-value">{activeCandidate.latitude?.toFixed(5)}°N</span>
               </div>
               <div className="stat-card">
                 <span className="stat-label">Longitude</span>
-                <span className="stat-val">{site.longitude?.toFixed(6)}° E</span>
+                <span className="stat-value">{activeCandidate.longitude?.toFixed(5)}°E</span>
               </div>
               <div className="stat-card">
                 <span className="stat-label">Elevation</span>
-                <span className="stat-val accent-blue">{site.elevation?.toFixed(1)} m</span>
+                <span className="stat-value text-blue">{activeCandidate.elevation?.toFixed(1)} m</span>
               </div>
               <div className="stat-card">
-                <span className="stat-label">Drainage Offset</span>
-                <span className="stat-val">~{Math.round(site.distanceToChannelMeters || 45)} m</span>
+                <span className="stat-label">Channel Buffer</span>
+                <span className="stat-value">~{Math.round(activeCandidate.distanceToChannelMeters || 45)} m</span>
               </div>
             </div>
 
-            {site.inSelectedArea && (
-              <div className="selection-match-notice">
-                <ShieldCheck size={14} style={{ color: '#10b981' }} />
-                <span>Located within user-selected land area boundary</span>
+            {activeCandidate.inSelectedArea && (
+              <div className="selection-notice-pill">
+                <CheckCircle2 size={13} style={{ color: '#10b981' }} />
+                <span>Optimized inside user-selected land boundary</span>
               </div>
             )}
           </div>
 
-          {/* Card 2: Catchment Area */}
+          {/* Card 2: Catchment Basin */}
           <div className="result-card">
             <div className="card-header">
               <div className="card-title">
-                <Droplets size={18} style={{ color: '#10b981' }} />
+                <Layers size={18} style={{ color: '#10b981' }} />
                 <span>Upstream Catchment Basin</span>
               </div>
-              <span className="unit-badge">D8 Traced</span>
+              <span className="tag-info">D8 Watershed</span>
             </div>
 
             <div className="stats-grid-2x2">
-              <div className="stat-card success-stat">
+              <div className="stat-card highlight-green">
                 <span className="stat-label">Catchment Area</span>
-                <span className="stat-val-lg accent-green">
-                  {catchment.areaHectares ? catchment.areaHectares.toFixed(2) : '0.00'} <small>ha</small>
+                <span className="stat-value text-green" style={{ fontSize: '1.25rem' }}>
+                  {catchment.areaHectares?.toFixed(2) || '0'} <small style={{ fontSize: '0.8rem' }}>ha</small>
                 </span>
               </div>
               <div className="stat-card">
-                <span className="stat-label">Square Meters</span>
-                <span className="stat-val">
-                  {catchment.areaSquareMeters ? catchment.areaSquareMeters.toLocaleString() : '0'} m²
-                </span>
+                <span className="stat-label">Square Metres</span>
+                <span className="stat-value">{catchment.areaSquareMeters?.toLocaleString() || '0'} m²</span>
               </div>
               <div className="stat-card">
-                <span className="stat-label">Square Kilometers</span>
-                <span className="stat-val">
-                  {catchment.areaSquareKilometers ? catchment.areaSquareKilometers.toFixed(4) : '0.00'} km²
-                </span>
+                <span className="stat-label">Square Kilometres</span>
+                <span className="stat-value">{catchment.areaSquareKilometers?.toFixed(4) || '0'} km²</span>
               </div>
               <div className="stat-card">
-                <span className="stat-label">Contributing Flow Cells</span>
-                <span className="stat-val">{site.flowAccumulation || '14'} cells</span>
+                <span className="stat-label">Flow Accumulation</span>
+                <span className="stat-value">{activeCandidate.flowAccumulation || 14} cells</span>
               </div>
             </div>
           </div>
 
-          {/* Card 3: Expected Collectable Water Volume */}
-          <div className="result-card highlight-water">
+          {/* Card 3: Water Volume */}
+          <div className="result-card water-summary-card">
             <div className="card-header">
               <div className="card-title">
-                <CloudRain size={18} style={{ color: '#60a5fa' }} />
-                <span>Expected Water Volume</span>
+                <Droplets size={18} style={{ color: '#60a5fa' }} />
+                <span>Expected Collectable Water Volume</span>
               </div>
-              <span className="live-tag">Interactive</span>
+              <span className="tag-accent">Hydrological Model</span>
             </div>
 
-            <div className="water-volume-display">
-              <div className="water-main-value">
-                <span className="big-number">{waterVolume?.expectedVolumeM3?.toLocaleString() || '0'}</span>
-                <span className="big-unit">m³ (Cubic Metres)</span>
+            <div className="water-metric-box">
+              <div className="water-vol-number">
+                {(activeCandidate.expectedVolumeM3 || waterVolume?.expectedVolumeM3)?.toLocaleString() || '0'} m³
               </div>
-              
-              <div className="water-sub-units">
-                <div className="sub-unit">
-                  <span className="sub-lbl">Total Capacity:</span>
-                  <span className="sub-val">{((waterVolume?.expectedVolumeLiters || 0) / 1000000).toFixed(2)} Million Litres</span>
-                </div>
-                <div className="sub-unit">
-                  <span className="sub-lbl">Acre-Feet:</span>
-                  <span className="sub-val">{waterVolume?.expectedVolumeAcreFeet || 0} ac-ft</span>
-                </div>
+              <div className="water-vol-liters">
+                = {(((activeCandidate.expectedVolumeM3 || waterVolume?.expectedVolumeM3) * 1000 || 0) / 1000000).toFixed(2)} Million Litres ({waterVolume?.expectedVolumeAcreFeet || 0} Acre-Feet)
               </div>
             </div>
 
-            <div className="water-assumptions-box">
+            <div className="water-assumptions-bar">
               <div className="assump-item">
-                <span>Rainfall Assumption:</span> <strong>{waterVolume?.rainfallMm || rainfall} mm</strong>
+                <span>Rainfall:</span> <strong>{waterVolume?.rainfallMm || rainfall} mm</strong>
               </div>
               <div className="assump-item">
                 <span>Runoff Coeff (C):</span> <strong>{waterVolume?.runoffCoefficient || runoff}</strong>
@@ -250,7 +261,7 @@ const ResultsPanel = ({ result, loading, error, onReset }) => {
             </div>
           </div>
 
-          {/* Card 4: Why This Pond Location? (Reasoning Engine) */}
+          {/* Card 4: Why This Pond Location? */}
           <div className="result-card">
             <div className="card-header">
               <div className="card-title">
@@ -271,7 +282,115 @@ const ResultsPanel = ({ result, loading, error, onReset }) => {
         </>
       )}
 
-      {/* TAB 2: SUITABILITY BREAKDOWN */}
+      {/* TAB 2: CANDIDATE COMPARISON (CRITICAL FEATURE) */}
+      {activeTab === 'comparison' && (
+        <div className="result-card comparison-card">
+          <div className="card-header">
+            <div className="card-title">
+              <Table size={18} style={{ color: '#38bdf8' }} />
+              <span>Pond Site Candidates Comparison</span>
+            </div>
+            <span className="score-pill">{candidates.length} Locations Evaluated</span>
+          </div>
+
+          <p className="tab-desc">
+            Spatially distinct candidate sites ranked by multi-factor GIS suitability. Click any candidate to focus on the map and view its specific hydrology:
+          </p>
+
+          <div className="candidates-list">
+            {candidates.map((cand, idx) => {
+              const isSelected = (cand.id === activeCandidate.id) || (idx === 0 && !activeCandidateId);
+              const scorePct = ((cand.suitabilityScore || 0) * 100).toFixed(1);
+              return (
+                <div 
+                  key={cand.id || idx}
+                  className={`candidate-compare-row ${isSelected ? 'active-cand-row' : ''}`}
+                  onClick={() => onSelectCandidate && onSelectCandidate(cand)}
+                >
+                  <div className="cand-row-header">
+                    <div className="cand-rank-badge">
+                      {cand.isRecommended ? (
+                        <span className="rank-pill rank-1">
+                          <Award size={13} /> Rank #{cand.rank || 1} (Recommended)
+                        </span>
+                      ) : (
+                        <span className="rank-pill">
+                          Rank #{cand.rank || idx + 1}
+                        </span>
+                      )}
+                      <span className="cand-coords">
+                        {cand.latitude?.toFixed(4)}°N, {cand.longitude?.toFixed(4)}°E
+                      </span>
+                    </div>
+
+                    <div className="cand-score-tag">
+                      <strong style={{ color: cand.isRecommended ? '#10b981' : '#38bdf8' }}>{scorePct}%</strong>
+                    </div>
+                  </div>
+
+                  <div className="cand-stats-strip">
+                    <div className="cand-stat">
+                      <span className="lbl">Elevation</span>
+                      <span className="val">{cand.elevation?.toFixed(1)} m</span>
+                    </div>
+                    <div className="cand-stat">
+                      <span className="lbl">Inflow Volume</span>
+                      <span className="val highlight">{cand.expectedVolumeM3?.toLocaleString() || '—'} m³</span>
+                    </div>
+                    <div className="cand-stat">
+                      <span className="lbl">Channel Buffer</span>
+                      <span className="val">~{Math.round(cand.distanceToChannelMeters || 0)} m</span>
+                    </div>
+                    <div className="cand-stat">
+                      <span className="lbl">Upstream Flow</span>
+                      <span className="val">{cand.flowAccumulation || 10} cells</span>
+                    </div>
+                  </div>
+
+                  {/* Pros & Trade-offs */}
+                  {cand.pros && cand.pros.length > 0 && (
+                    <div className="cand-pros-box">
+                      <div className="pros-title">Key Advantages:</div>
+                      {cand.pros.slice(0, 2).map((p, pi) => (
+                        <div key={pi} className="pro-line">
+                          <Check size={11} style={{ color: '#10b981', flexShrink: 0 }} />
+                          <span>{p}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {cand.cons && cand.cons.length > 0 && (
+                    <div className="cand-cons-box">
+                      <div className="cons-title">Considerations:</div>
+                      {cand.cons.slice(0, 1).map((c, ci) => (
+                        <div key={ci} className="con-line">
+                          <span className="bullet-dash">•</span>
+                          <span>{c}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="cand-action-footer">
+                    <button 
+                      className={`btn-select-cand ${isSelected ? 'selected' : ''}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (onSelectCandidate) onSelectCandidate(cand);
+                      }}
+                    >
+                      {isSelected ? '✓ Currently Focused' : 'Focus on Map & Overview'}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 3: SUITABILITY BREAKDOWN */}
       {activeTab === 'suitability' && (
         <div className="result-card">
           <div className="card-header">
@@ -280,12 +399,12 @@ const ResultsPanel = ({ result, loading, error, onReset }) => {
               <span>Multi-Factor Suitability Breakdown</span>
             </div>
             <span className="score-pill">
-              {((site.suitabilityScore || 0.88) * 100).toFixed(1)}% Total
+              {((activeCandidate.suitabilityScore || 0.88) * 100).toFixed(1)}% Total
             </span>
           </div>
 
           <p className="tab-desc">
-            Geospatial suitability composite calculated using six hydrological and topographical factors:
+            Geospatial suitability composite calculated using six hydrological and topographical factors for {activeCandidate.name || 'Candidate #1'}:
           </p>
 
           <div className="factors-list">
@@ -323,7 +442,7 @@ const ResultsPanel = ({ result, loading, error, onReset }) => {
         </div>
       )}
 
-      {/* TAB 3: WATER VOLUME SIMULATOR */}
+      {/* TAB 4: WATER VOLUME SIMULATOR */}
       {activeTab === 'water' && (
         <div className="result-card">
           <div className="card-header">

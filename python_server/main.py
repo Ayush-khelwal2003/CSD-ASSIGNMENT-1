@@ -1,8 +1,8 @@
 import os
-import json
 import time
+import json
 import uuid
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 from pydantic import BaseModel
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Query
@@ -78,7 +78,8 @@ async def analyze_contour(
     file: Optional[UploadFile] = File(None),
     selected_area: Optional[str] = Form(None),
     rainfall_mm: float = Form(100.0),
-    runoff_coeff: float = Form(0.70)
+    runoff_coeff: float = Form(0.70),
+    max_candidates: Optional[int] = Form(None)
 ):
     upload = contour_map or file
     if not upload or not upload.filename:
@@ -109,16 +110,38 @@ async def analyze_contour(
         terrain_model = build_terrain_model(features, metadata, target_cell_count=35)
 
         # Step 3: Select Pond Site (constrained to selected_area if supplied)
-        site_result = select_pond_site(terrain_model, metadata, selected_area=parsed_area)
+        site_result = select_pond_site(
+            terrain_model, metadata,
+            selected_area=parsed_area,
+            max_candidates=max_candidates
+        )
         selected_site = site_result["selected"]
         candidates = site_result["candidates"]
 
-        # Step 4: Delineate Catchment
+        # Step 4: Delineate Catchment for selected optimal site
         catchment = delineate_catchment(terrain_model, selected_site)
 
         # Step 5: Calculate Expected Water Volume
         catchment_area_m2 = catchment.get("areaSquareMeters", 0.0)
         water_volume = calculate_water_volume(catchment_area_m2, rainfall_mm, runoff_coeff)
+        selected_site["waterVolume"] = water_volume
+        selected_site["expectedVolumeM3"] = water_volume["expectedVolumeM3"]
+
+        # Calculate water volume and catchment area for every candidate
+        cell_area = (terrain_model["cellSizeMeters"]) ** 2
+        for cand in candidates:
+            if cand.get("rank") == 1:
+                cand["waterVolume"] = water_volume
+                cand["expectedVolumeM3"] = water_volume["expectedVolumeM3"]
+                cand["catchmentAreaM2"] = catchment_area_m2
+                cand["catchmentAreaHectares"] = round(catchment_area_m2 / 10000.0, 2)
+            else:
+                c_area = max(cand.get("estimatedCatchmentM2", 100.0), float(cand.get("flowAccumulation", 1)) * cell_area)
+                c_vol = calculate_water_volume(c_area, rainfall_mm, runoff_coeff)
+                cand["waterVolume"] = c_vol
+                cand["expectedVolumeM3"] = c_vol["expectedVolumeM3"]
+                cand["catchmentAreaM2"] = round(c_area, 2)
+                cand["catchmentAreaHectares"] = round(c_area / 10000.0, 2)
 
         processing_time_ms = int((time.time() - start_time) * 1000)
 
