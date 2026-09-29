@@ -615,22 +615,22 @@
             <p style="font-size:0.82rem;color:var(--text-muted)">Upload KML/KMZ elevation contours to delineate catchments and calculate optimal village pond sites.</p>
           </div>
 
-          <!-- HIDDEN FILE INPUT (Positioned outside drop-zone to prevent bubbling recursion) -->
+                    <!-- NATIVE BROWSER FILE INPUT & LABEL -->
           <input 
             type="file" 
             id="file-input" 
-            accept=".kml,.kmz,application/vnd.google-earth.kml+xml,application/vnd.google-earth.kmz,application/zip,application/octet-stream" 
-            style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0;opacity:0" 
+            accept=".kml,.kmz" 
+            style="display:none" 
           />
 
-          <div class="drop-zone" id="drop-zone" tabindex="0" role="button" aria-label="Upload contour map file">
+          <label for="file-input" class="drop-zone" id="drop-zone">
             <div id="drop-zone-content">
-              <i data-lucide="upload-cloud" style="width:44px;height:44px;color:#38bdf8;margin-bottom:0.5rem;pointer-events:none"></i>
-              <div style="font-size:0.95rem;font-weight:600;pointer-events:none">Drag &amp; drop contour map here</div>
-              <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.2rem;pointer-events:none">Supports <strong>.kml</strong> or <strong>.kmz</strong> elevation vector data</div>
-              <button type="button" class="browse-pill" id="browse-file-btn" style="pointer-events:auto;cursor:pointer;border:none">Browse File</button>
+              <i data-lucide="upload-cloud" style="width:44px;height:44px;color:#38bdf8;margin-bottom:0.5rem"></i>
+              <div style="font-size:0.95rem;font-weight:600">Drag &amp; drop contour map here</div>
+              <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.2rem">Supports <strong>.kml</strong> or <strong>.kmz</strong> elevation vector data</div>
+              <span class="browse-pill" id="browse-pill-text">Browse File</span>
             </div>
-          </div>
+          </label>
 
           <!-- LAND AREA SELECTION STATUS CARD -->
           <div class="card-box" id="land-area-card">
@@ -1181,59 +1181,34 @@
 
     document.getElementById('clear-sel-btn').addEventListener('click', clearLandArea);
 
-    // File Upload Handling
-    const dropZone = document.getElementById('drop-zone');
+        // File Upload Handling using Native HTML Label Activation
     const fileInput = document.getElementById('file-input');
-    const browseBtn = document.getElementById('browse-file-btn');
+    const dropZone = document.getElementById('drop-zone');
 
-    function openFileChooser(e) {
-      if (e) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-      fileInput.value = ''; // Clear value so selecting the same file fires change event
-      fileInput.click();
-    }
-
-    if (browseBtn) {
-      browseBtn.addEventListener('click', openFileChooser);
-    }
-
-    if (dropZone) {
-      dropZone.addEventListener('click', (e) => {
-        if (e.target !== browseBtn) {
-          openFileChooser(e);
-        }
-      });
-      dropZone.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          openFileChooser(e);
-        }
-      });
-      dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        dropZone.classList.add('active');
-      });
-      dropZone.addEventListener('dragleave', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        dropZone.classList.remove('active');
-      });
-      dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        dropZone.classList.remove('active');
-        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
-          handleFile(e.dataTransfer.files[0]);
-        }
-      });
-    }
+    fileInput.addEventListener('click', () => {
+      fileInput.value = ''; // Always reset so re-selecting the exact same file triggers change
+    });
 
     fileInput.addEventListener('change', (e) => {
       if (e.target.files && e.target.files[0]) {
         handleFile(e.target.files[0]);
+      }
+    });
+
+    // Drag and drop handlers
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('active');
+    });
+    dropZone.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('active');
+    });
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('active');
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+        handleFile(e.dataTransfer.files[0]);
       }
     });
 
