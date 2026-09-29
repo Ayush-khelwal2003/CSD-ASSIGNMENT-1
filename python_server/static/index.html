@@ -632,10 +632,19 @@
                 <i data-lucide="crop" style="width:16px;height:16px;color:#f59e0b"></i>
                 <span>Target Land Selection</span>
               </div>
-              <span id="land-status-tag" style="font-size:0.68rem;font-weight:700;color:var(--text-muted)">Optional</span>
+              <span id="land-status-tag" style="font-size:0.68rem;font-weight:700;color:#f59e0b">Pending</span>
             </div>
-            <div id="land-area-content" style="font-size:0.78rem;color:var(--text-muted)">
-              Draw a custom land parcel on the map to constrain and optimize the pond siting within that specific area.
+            <div id="land-area-content">
+              <div style="font-size:0.82rem;color:#f8fafc;font-weight:600;margin-bottom:0.25rem">
+                No land area selected
+              </div>
+              <div style="font-size:0.74rem;color:var(--text-muted);margin-bottom:0.65rem">
+                Use <strong>Select Land Area</strong> and drag a rectangle on the map to define the target area.
+              </div>
+              <button type="button" class="btn-header" onclick="toggleDrawingMode(true)" style="background:rgba(245,158,11,0.18);border:1px solid rgba(245,158,11,0.45);color:#fbbf24;width:100%;justify-content:center;padding:0.45rem">
+                <i data-lucide="crop" style="width:14px;height:14px"></i>
+                <span>Select Land Area</span>
+              </button>
             </div>
           </div>
 
@@ -683,7 +692,7 @@
 
           <button class="btn-primary" id="analyze-btn" disabled>
             <i data-lucide="sparkles" style="width:18px;height:18px"></i>
-            <span id="analyze-btn-text">Analyze Full Terrain Model</span>
+            <span id="analyze-btn-text">Select Land Area to Analyze</span>
           </button>
         </div>
 
@@ -716,80 +725,89 @@
             <button class="res-tab" data-tab="tab-simulator">Simulator</button>
           </div>
 
-          <!-- TAB: OVERVIEW -->
-          <div id="tab-overview" class="tab-content" style="display:flex;flex-direction:column;gap:0.85rem">
-            <!-- SUGGESTED POND SITE -->
-            <div class="card-box" style="border-color:rgba(56,189,248,0.4);background:rgba(15,23,42,0.85)">
-              <div class="card-head">
-                <div class="card-title">
-                  <i data-lucide="map-pin" style="width:16px;height:16px;color:#38bdf8"></i>
-                  <span>Suggested Pond Location</span>
-                </div>
-                <span style="font-size:0.72rem;font-weight:700;background:rgba(56,189,248,0.2);color:#38bdf8;padding:0.15rem 0.5rem;border-radius:12px" id="res-score-pill">88.5% Suitability</span>
+                    <!-- TAB: OVERVIEW / POND CANDIDATES -->
+          <div id="tab-overview" class="tab-content" style="display:flex;flex-direction:column;gap:0.9rem">
+            
+            <div id="res-selection-notice" style="display:none;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.35);padding:0.5rem 0.75rem;border-radius:8px;font-size:0.75rem;color:#fbbf24">
+              <div style="font-weight:700;display:flex;align-items:center;gap:0.35rem">
+                <span>📍 Constrained to Selected Land Area</span>
               </div>
+              <div style="color:var(--text-muted);font-size:0.7rem;margin-top:2px" id="res-sel-summary-text">
+                Pond candidates ranked strictly within designated boundary
+              </div>
+            </div>
+
+            <!-- SECTION: POND SITE CANDIDATES -->
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:0.25rem">
+              <h4 style="font-size:0.92rem;font-weight:700;color:#fff;letter-spacing:-0.01em;display:flex;align-items:center;gap:0.4rem">
+                <i data-lucide="layers" style="width:16px;height:16px;color:#38bdf8"></i>
+                <span>Pond Site Candidates</span>
+              </h4>
+              <span style="font-size:0.7rem;color:var(--text-muted);font-family:var(--font-mono)" id="candidates-count-pill">5 Sites Ranked</span>
+            </div>
+
+            <!-- BEST POND LOCATION CARD -->
+            <div class="card-box" id="best-candidate-card" style="border:1.5px solid rgba(245,158,11,0.6);background:linear-gradient(180deg, rgba(245,158,11,0.12), rgba(15,23,42,0.85));box-shadow:0 0 20px rgba(245,158,11,0.15)">
+              <div class="card-head" style="margin-bottom:0.6rem">
+                <div style="display:flex;align-items:center;gap:0.4rem">
+                  <span style="font-size:1.1rem">🏆</span>
+                  <div>
+                    <div style="font-size:0.85rem;font-weight:800;color:#fbbf24;letter-spacing:0.02em;text-transform:uppercase">Best Pond Location</div>
+                    <div style="font-size:0.72rem;color:var(--text-muted)" id="best-cand-subtitle">Candidate #1 (Top Suitability)</div>
+                  </div>
+                </div>
+                <span style="font-size:0.78rem;font-weight:800;background:rgba(245,158,11,0.25);border:1px solid rgba(245,158,11,0.5);color:#fbbf24;padding:0.2rem 0.55rem;border-radius:12px" id="res-score-pill">91.4% Score</span>
+              </div>
+
               <div class="stat-grid-2x2">
-                <div class="stat-box"><span class="stat-lbl">Latitude</span><span class="stat-val" id="res-lat">21.2578°N</span></div>
-                <div class="stat-box"><span class="stat-lbl">Longitude</span><span class="stat-val" id="res-lng">81.2943°E</span></div>
                 <div class="stat-box"><span class="stat-lbl">Elevation</span><span class="stat-val blue" id="res-elev">279.1 m</span></div>
-                <div class="stat-box"><span class="stat-lbl">Channel Buffer</span><span class="stat-val" id="res-dist">~724 m</span></div>
+                <div class="stat-box"><span class="stat-lbl">Catchment Area</span><span class="stat-val green" id="res-ha">11.77 ha</span></div>
+                <div class="stat-box"><span class="stat-lbl">Expected Water</span><span class="stat-val" style="color:#60a5fa" id="res-water-m3">8,236 m³</span></div>
+                <div class="stat-box"><span class="stat-lbl">Channel Buffer</span><span class="stat-val" id="res-dist">~45 m</span></div>
               </div>
-              <div id="res-selection-notice" style="display:none;margin-top:0.5rem;background:rgba(16,185,129,0.1);padding:0.35rem 0.6rem;border-radius:6px;font-size:0.72rem;color:#34d399">
-                ✓ Optimized within designated Land Selection boundary
+
+              <div style="margin-top:0.6rem;background:rgba(0,0,0,0.3);padding:0.5rem 0.65rem;border-radius:6px">
+                <div style="font-size:0.68rem;text-transform:uppercase;color:#34d399;font-weight:700;margin-bottom:2px">Selection Rationale:</div>
+                <div id="res-reasons-text" style="font-size:0.74rem;color:#cbd5e1;line-height:1.4">
+                  Natural depression + suitable slope + strong upstream catchment + adequate drainage-channel buffer + favorable terrain convergence.
+                </div>
               </div>
+
+              <button class="btn-sm-action" id="btn-view-best-catchment" onclick="focusCandidate('candidate-1')" style="margin-top:0.65rem;width:100%;background:rgba(245,158,11,0.2);border:1px solid rgba(245,158,11,0.5);color:#fbbf24;padding:0.45rem;border-radius:6px;font-size:0.75rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.4rem">
+                <i data-lucide="crosshair" style="width:14px;height:14px"></i>
+                <span>View Best Catchment on Map</span>
+              </button>
             </div>
 
-            <!-- CATCHMENT AREA -->
-            <div class="card-box">
-              <div class="card-head">
-                <div class="card-title">
-                  <i data-lucide="droplets" style="width:16px;height:16px;color:#10b981"></i>
-                  <span>Upstream Catchment Basin</span>
-                </div>
-                <span style="font-size:0.7rem;color:var(--text-muted)">D8 Flow Traced</span>
+            <!-- ALTERNATIVE CANDIDATES LIST -->
+            <div style="display:flex;flex-direction:column;gap:0.5rem">
+              <div style="font-size:0.75rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.04em">
+                Alternative Locations
               </div>
-              <div class="stat-grid-2x2">
-                <div class="stat-box" style="background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.3)">
-                  <span class="stat-lbl">Catchment Area</span>
-                  <span class="stat-val green" style="font-size:1.25rem" id="res-ha">11.77 <small style="font-size:0.8rem">ha</small></span>
-                </div>
-                <div class="stat-box"><span class="stat-lbl">Square Metres</span><span class="stat-val" id="res-m2">117,662 m²</span></div>
-                <div class="stat-box"><span class="stat-lbl">Square Kilometres</span><span class="stat-val" id="res-km2">0.1177 km²</span></div>
-                <div class="stat-box"><span class="stat-lbl">Flow Accumulation</span><span class="stat-val" id="res-accum">13 cells</span></div>
-              </div>
+              <div id="alt-candidates-list" style="display:flex;flex-direction:column;gap:0.55rem"></div>
             </div>
 
-            <!-- WATER VOLUME -->
-            <div class="water-box">
+            <!-- WATER HARVESTING SIMULATOR LINK -->
+            <div class="water-box" style="margin-top:0.4rem">
               <div class="card-head">
                 <div class="card-title">
                   <i data-lucide="cloud-rain" style="width:16px;height:16px;color:#60a5fa"></i>
-                  <span>Expected Collectable Water Volume</span>
+                  <span>Active Site Water Harvest</span>
                 </div>
-                <span style="font-size:0.68rem;font-weight:700;background:rgba(16,185,129,0.2);color:#34d399;padding:0.1rem 0.45rem;border-radius:4px">Calculated</span>
+                <span style="font-size:0.68rem;font-weight:700;background:rgba(16,185,129,0.2);color:#34d399;padding:0.1rem 0.45rem;border-radius:4px">D8 Model</span>
               </div>
               <div>
-                <div class="water-big" id="res-water-m3">10,589.58 m³</div>
-                <div class="water-sub" id="res-water-liters">= 10.59 Million Litres (8.59 Acre-Feet)</div>
+                <div class="water-big" id="active-site-water-m3">8,236 m³</div>
+                <div class="water-sub" id="active-site-water-liters">= 8.24 Million Litres</div>
               </div>
-              <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:var(--text-muted);background:rgba(0,0,0,0.25);padding:0.35rem 0.6rem;border-radius:6px">
+              <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:var(--text-muted);background:rgba(0,0,0,0.25);padding:0.35rem 0.55rem;border-radius:6px">
                 <span>Rainfall: <strong style="color:#93c5fd" id="res-rf-assump">100 mm</strong></span>
                 <span>Runoff Coeff (C): <strong style="color:#93c5fd" id="res-ro-assump">0.70</strong></span>
               </div>
             </div>
 
-            <!-- WHY THIS LOCATION -->
-            <div class="card-box">
-              <div class="card-head">
-                <div class="card-title">
-                  <i data-lucide="sparkles" style="width:16px;height:16px;color:#f59e0b"></i>
-                  <span>Why This Pond Location?</span>
-                </div>
-              </div>
-              <div id="res-reasons-list"></div>
-            </div>
           </div>
 
-          
           <!-- TAB: CANDIDATE COMPARISON -->
           <div id="tab-comparison" class="tab-content" style="display:none;flex-direction:column;gap:0.75rem">
             <div style="font-size:0.78rem;color:var(--text-muted)">
@@ -856,9 +874,9 @@
               <div class="basemap-selector">
                 <i data-lucide="layers" style="width:14px;height:14px;color:var(--text-muted)"></i>
                 <select id="basemap-select">
-                  <option value="dark">Dark Carto</option>
-                  <option value="satellite">Satellite Imagery</option>
-                  <option value="streets">OpenStreetMap</option>
+                  <option value="satellite" selected>Satellite (Esri Imagery)</option>
+                  <option value="streets">Street / Map (OpenStreetMap)</option>
+                  <option value="terrain">Terrain (Esri Topo)</option>
                 </select>
               </div>
             </div>
@@ -921,21 +939,21 @@
 
     // Map Setup
     const basemaps = {
-      dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; CartoDB &copy; OpenStreetMap'
-      }),
       satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Esri, Maxar'
+        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics'
       }),
       streets: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap'
+        attribution: '&copy; OpenStreetMap contributors'
+      }),
+      terrain: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, USGS'
       })
     };
 
     const map = L.map('map', {
       center: [21.25, 81.29],
       zoom: 13,
-      layers: [basemaps.dark]
+      layers: [basemaps.satellite]
     });
 
     let layerGroup = L.featureGroup().addTo(map);
@@ -967,15 +985,25 @@
     setInterval(checkHealth, 25000);
 
     // Land Area Selection Drawing Handlers
-    function toggleDrawingMode() {
-      state.isDrawing = !state.isDrawing;
+        function toggleDrawingMode(forceState) {
+      state.isDrawing = typeof forceState === 'boolean' ? forceState : !state.isDrawing;
       const drawText = state.isDrawing ? 'Cancel Draw' : 'Select Land Area';
-      document.getElementById('draw-btn-text').textContent = drawText;
-      document.getElementById('map-draw-text').textContent = drawText;
-      document.getElementById('draw-area-toggle-btn').classList.toggle('active', state.isDrawing);
-      document.getElementById('map-draw-btn').classList.toggle('active', state.isDrawing);
+      const dBtnText = document.getElementById('draw-btn-text');
+      if (dBtnText) dBtnText.textContent = drawText;
+      const mBtnText = document.getElementById('map-draw-text');
+      if (mBtnText) mBtnText.textContent = drawText;
+
+      document.getElementById('draw-area-toggle-btn')?.classList.toggle('active', state.isDrawing);
+      document.getElementById('map-draw-btn')?.classList.toggle('active', state.isDrawing);
       document.getElementById('drawing-banner').style.display = state.isDrawing ? 'flex' : 'none';
-      map.getContainer().style.cursor = state.isDrawing ? 'crosshair' : '';
+
+      if (state.isDrawing) {
+        map.dragging.disable();
+        map.getContainer().style.cursor = 'crosshair';
+      } else {
+        map.dragging.enable();
+        map.getContainer().style.cursor = '';
+      }
     }
 
     document.getElementById('draw-area-toggle-btn').addEventListener('click', toggleDrawingMode);
@@ -997,7 +1025,7 @@
       }
     });
 
-    map.on('mouseup', (e) => {
+        map.on('mouseup', (e) => {
       if (!state.isDrawing || !dragStart) return;
       const dragEnd = e.latlng;
       const minLat = Math.min(dragStart.lat, dragEnd.lat);
@@ -1007,56 +1035,141 @@
 
       if (Math.abs(maxLat - minLat) > 0.0001 && Math.abs(maxLng - minLng) > 0.0001) {
         const midLat = (minLat + maxLat) / 2;
+        const midLng = (minLng + maxLng) / 2;
         const latMeters = (maxLat - minLat) * 111320;
         const lngMeters = (maxLng - minLng) * (111320 * Math.cos((midLat * Math.PI) / 180));
         const areaM2 = Math.round(latMeters * lngMeters);
         const areaHa = Number((areaM2 / 10000).toFixed(2));
 
-        setLandArea({ minLat, maxLat, minLng, maxLng, areaSquareMeters: areaM2, areaHectares: areaHa });
+        const geojson = {
+          type: "Polygon",
+          coordinates: [[
+            [minLng, maxLat],
+            [maxLng, maxLat],
+            [maxLng, minLat],
+            [minLng, minLat],
+            [minLng, maxLat]
+          ]]
+        };
+
+        setLandArea({
+          minLat, maxLat, minLng, maxLng,
+          centerLat: midLat,
+          centerLng: midLng,
+          areaSquareMeters: areaM2,
+          areaHectares: areaHa,
+          geojson: geojson
+        });
       }
 
-      if (tempRect) { map.removeLayer(tempRect); tempRect = null; }
+      if (tempRect) {
+        map.removeLayer(tempRect);
+        tempRect = null;
+      }
       dragStart = null;
-      toggleDrawingMode();
+      toggleDrawingMode(false);
     });
 
-    function setLandArea(area) {
+        function setLandArea(area) {
       state.selectedArea = area;
-      if (selectionLayer) map.removeLayer(selectionLayer);
+      if (selectionLayer) {
+        map.removeLayer(selectionLayer);
+        selectionLayer = null;
+      }
 
       selectionLayer = L.rectangle([[area.minLat, area.minLng], [area.maxLat, area.maxLng]], {
-        color: '#f59e0b', weight: 2.5, dashArray: '6,6', fillColor: '#fbbf24', fillOpacity: 0.18
+        color: '#f59e0b',
+        weight: 3,
+        dashArray: '6, 6',
+        fillColor: '#fbbf24',
+        fillOpacity: 0.18
       }).addTo(map);
 
       selectionLayer.bindPopup(`
         <div class="custom-map-popup">
           <h4 style="color:#f59e0b">Target Land Selection</h4>
           <p>Area: <strong>${area.areaHectares} ha</strong> (${area.areaSquareMeters.toLocaleString()} m²)</p>
-          <p style="color:#94a3b8;font-size:11px">Pond location will be optimized within this boundary</p>
+          <div style="font-size:11px;color:#94a3b8;margin-top:4px">
+            <div>North: ${area.maxLat.toFixed(4)}°N | South: ${area.minLat.toFixed(4)}°N</div>
+            <div>East: ${area.maxLng.toFixed(4)}°E | West: ${area.minLng.toFixed(4)}°E</div>
+          </div>
         </div>
       `);
 
       document.getElementById('map-selection-badge').style.display = 'flex';
       document.getElementById('map-sel-ha').textContent = `${area.areaHectares} ha`;
-      document.getElementById('land-area-card').classList.add('selected');
+      
+      const landCard = document.getElementById('land-area-card');
+      landCard.classList.add('selected');
       document.getElementById('land-status-tag').textContent = 'Active';
       document.getElementById('land-status-tag').style.color = '#f59e0b';
       document.getElementById('land-area-content').innerHTML = `
-        <div style="display:flex;justify-content:space-between;margin-bottom:2px"><span>Target Area:</span><strong style="color:#fbbf24">${area.areaHectares} ha</strong></div>
-        <div style="display:flex;justify-content:space-between"><span>Square Metres:</span><strong style="color:#fff">${area.areaSquareMeters.toLocaleString()} m²</strong></div>
+        <div class="selected-area-summary">
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+            <span style="color:var(--text-muted)">Selected Area:</span>
+            <strong style="color:#fbbf24;font-size:0.92rem">${area.areaHectares} ha</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <span style="color:var(--text-muted)">Square Metres:</span>
+            <strong style="color:#fff">${area.areaSquareMeters.toLocaleString()} m²</strong>
+          </div>
+          <div style="background:rgba(0,0,0,0.3);padding:6px 8px;border-radius:6px;font-size:0.7rem;font-family:var(--font-mono);color:#94a3b8;margin-bottom:8px">
+            <div>N: ${area.maxLat.toFixed(4)}° | S: ${area.minLat.toFixed(4)}°</div>
+            <div>E: ${area.maxLng.toFixed(4)}° | W: ${area.minLng.toFixed(4)}°</div>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button class="btn-sm-action" onclick="changeSelection()" style="flex:1;background:rgba(245,158,11,0.18);border:1px solid rgba(245,158,11,0.4);color:#fbbf24;padding:4px 8px;border-radius:6px;font-size:0.75rem;cursor:pointer">
+              Change Selection
+            </button>
+            <button class="btn-sm-action" onclick="clearLandArea()" style="flex:1;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#f87171;padding:4px 8px;border-radius:6px;font-size:0.75rem;cursor:pointer">
+              Clear Selection
+            </button>
+          </div>
+        </div>
       `;
+      document.getElementById('analyze-btn').disabled = false;
       document.getElementById('analyze-btn-text').textContent = 'Analyze Selected Land Area';
     }
 
     function clearLandArea() {
       state.selectedArea = null;
-      if (selectionLayer) { map.removeLayer(selectionLayer); selectionLayer = null; }
+      if (selectionLayer) {
+        map.removeLayer(selectionLayer);
+        selectionLayer = null;
+      }
+      if (state.activeCatchmentLayer) {
+        map.removeLayer(state.activeCatchmentLayer);
+        state.activeCatchmentLayer = null;
+      }
+      if (state.candidateMarkers) {
+        Object.values(state.candidateMarkers).forEach(m => map.removeLayer(m.marker));
+        state.candidateMarkers = {};
+      }
       document.getElementById('map-selection-badge').style.display = 'none';
-      document.getElementById('land-area-card').classList.remove('selected');
+      const landCard = document.getElementById('land-area-card');
+      landCard.classList.remove('selected');
       document.getElementById('land-status-tag').textContent = 'Optional';
       document.getElementById('land-status-tag').style.color = 'var(--text-muted)';
-      document.getElementById('land-area-content').textContent = 'Draw a custom land parcel on the map to constrain and optimize the pond siting within that specific area.';
+      document.getElementById('land-area-content').innerHTML = `
+        <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.5rem">
+          No land area selected. Use <strong>Select Land Area</strong> and drag a rectangle on the map.
+        </div>
+        <button class="btn-header" onclick="toggleDrawingMode(true)" style="background:rgba(245,158,11,0.15);border-color:rgba(245,158,11,0.35);color:#fbbf24;width:100%;justify-content:center">
+          <i data-lucide="crop" style="width:14px;height:14px"></i>
+          <span>Select Land Area</span>
+        </button>
+      `;
+      lucide.createIcons();
+
+      document.getElementById('results-section').style.display = 'none';
+      document.getElementById('upload-section').style.display = 'flex';
+      document.getElementById('new-analysis-btn').style.display = 'none';
       document.getElementById('analyze-btn-text').textContent = 'Analyze Full Terrain Model';
+    }
+
+    function changeSelection() {
+      clearLandArea();
+      toggleDrawingMode(true);
     }
 
     document.getElementById('clear-sel-btn').addEventListener('click', clearLandArea);
@@ -1076,7 +1189,7 @@
       if (e.target.files[0]) handleFile(e.target.files[0]);
     });
 
-    function handleFile(file) {
+        async function handleFile(file) {
       const ext = file.name.split('.').pop().toLowerCase();
       if (ext !== 'kml' && ext !== 'kmz') {
         alert('Please upload a .kml or .kmz contour file');
@@ -1087,10 +1200,46 @@
       document.getElementById('drop-zone-content').innerHTML = `
         <i data-lucide="file-check" style="width:36px;height:36px;color:#10b981;margin-bottom:0.35rem"></i>
         <div style="font-size:0.95rem;font-weight:600;color:#fff">${file.name}</div>
-        <div style="font-size:0.75rem;color:var(--text-muted)">${(file.size / 1048576).toFixed(2)} MB • <span style="color:#34d399">Ready</span></div>
+        <div style="font-size:0.75rem;color:var(--text-muted)">${(file.size / 1048576).toFixed(2)} MB • <span style="color:#34d399">Contour Vector Loaded</span></div>
       `;
       lucide.createIcons();
       document.getElementById('analyze-btn').disabled = false;
+
+      // Immediately render contours on satellite map
+      try {
+        const formData = new FormData();
+        formData.append('contour_map', file);
+        const res = await fetch('/api/parse-contours', { method: 'POST', body: formData });
+        const data = await res.json();
+        if (data.success && data.contours) {
+          layerGroup.clearLayers();
+          const meta = data.metadata || {};
+          const minE = meta.minElevation || 260;
+          const maxE = meta.maxElevation || 310;
+          const rangeE = maxE - minE || 1;
+
+          L.geoJSON(data.contours, {
+            style: (feat) => {
+              const elev = feat.properties?.elevation || minE;
+              const r = Math.max(0, Math.min(1, (elev - minE) / rangeE));
+              const col = r < 0.25 ? '#34d399' : r < 0.5 ? '#38bdf8' : r < 0.75 ? '#fbbf24' : '#f87171';
+              return { color: col, weight: 1.2, opacity: 0.7 };
+            },
+            onEachFeature: (feat, layer) => {
+              if (feat.properties?.elevation) {
+                layer.bindTooltip(`Elevation: ${feat.properties.elevation} m`, { sticky: true });
+              }
+            }
+          }).addTo(layerGroup);
+
+          if (data.bounds) {
+            const b = data.bounds;
+            map.fitBounds([[b.minLat, b.minLng], [b.maxLat, b.maxLng]], { padding: [30, 30] });
+          }
+        }
+      } catch (err) {
+        console.warn('Contour preview error:', err);
+      }
     }
 
     // Rainfall and Runoff sliders
@@ -1284,55 +1433,75 @@
       const candidatesList = (data.candidates && data.candidates.length > 0) ? data.candidates : [site];
       state.candidateMarkers = {};
 
-      // 1. Populate Candidate Comparison List
-      const compContainer = document.getElementById('candidates-comparison-list');
-      if (compContainer) {
-        compContainer.innerHTML = candidatesList.map((cand, idx) => {
-          const isRank1 = (cand.rank === 1) || (idx === 0);
-          const scorePct = ((cand.suitabilityScore || 0.8) * 100).toFixed(1);
-          const pros = cand.pros || [];
-          const cons = cand.cons || [];
-          return `
-            <div class="cand-row ${isRank1 ? 'active-cand' : ''}" id="cand-row-${cand.id || idx}" onclick="focusCandidate('${cand.id || 'candidate-' + (idx+1)}')">
-              <div class="cand-row-top">
-                <div style="display:flex;align-items:center;gap:0.4rem">
-                  <span class="cand-pill ${isRank1 ? 'rank-1' : ''}">
-                    ${isRank1 ? '★ Rank #1 (Recommended)' : 'Rank #' + (cand.rank || idx + 1)}
-                  </span>
-                  <span style="font-size:0.7rem;color:var(--text-muted);font-family:var(--font-mono)">
-                    ${cand.latitude?.toFixed(4)}°N, ${cand.longitude?.toFixed(4)}°E
-                  </span>
+            // Render Best and Alternative Candidate Cards
+      const candidatesList = (data.candidates && data.candidates.length > 0) ? data.candidates : [site];
+      state.candidateMarkers = {};
+
+      const bestCand = candidatesList[0];
+      state.activeCandidate = bestCand;
+
+      // Update Best Candidate Card
+      document.getElementById('res-score-pill').textContent = `${((bestCand.suitabilityScore || 0.88) * 100).toFixed(1)}% Score`;
+      document.getElementById('res-elev').textContent = `${bestCand.elevation?.toFixed(1) || 280.0} m`;
+      const bestHa = bestCand.catchmentAreaHectares || (bestCand.catchment?.areaHectares) || 11.77;
+      document.getElementById('res-ha').innerHTML = `${bestHa.toFixed(2)} <small style="font-size:0.8rem">ha</small>`;
+      const bestWaterM3 = bestCand.expectedVolumeM3 || (bestCand.waterVolume?.expectedVolumeM3) || 8236;
+      document.getElementById('res-water-m3').textContent = `${bestWaterM3.toLocaleString()} m³`;
+      document.getElementById('res-dist').textContent = `~${Math.round(bestCand.distanceToChannelMeters || 45)} m`;
+      document.getElementById('res-reasons-text').textContent = bestCand.reason || 'Natural depression + suitable slope + strong upstream catchment + adequate drainage-channel buffer + favorable terrain convergence.';
+
+      document.getElementById('active-site-water-m3').textContent = `${bestWaterM3.toLocaleString()} m³`;
+      document.getElementById('active-site-water-liters').textContent = `= ${((bestWaterM3 * 1000) / 1000000).toFixed(2)} Million Litres`;
+
+      if (data.selectedArea) {
+        document.getElementById('res-selection-notice').style.display = 'block';
+        document.getElementById('res-sel-summary-text').textContent = `Constrained inside ${data.selectedArea.areaHectares || 'selected'} ha land parcel`;
+      } else {
+        document.getElementById('res-selection-notice').style.display = 'none';
+      }
+
+      document.getElementById('candidates-count-pill').textContent = `${candidatesList.length} Sites Ranked`;
+
+      // Render Alternative Cards
+      const altContainer = document.getElementById('alt-candidates-list');
+      if (altContainer) {
+        if (candidatesList.length > 1) {
+          altContainer.innerHTML = candidatesList.slice(1).map((cand, idx) => {
+            const rank = cand.rank || (idx + 2);
+            const candId = cand.id || ('candidate-' + rank);
+            const scorePct = ((cand.suitabilityScore || 0.8) * 100).toFixed(1);
+            const cHa = (cand.catchmentAreaHectares || (cand.catchment?.areaHectares) || 8.5).toFixed(2);
+            const cWater = (cand.expectedVolumeM3 || (cand.waterVolume?.expectedVolumeM3) || 6000).toLocaleString();
+            return `
+              <div class="card-box" id="alt-card-${candId}" style="border:1px solid rgba(255,255,255,0.08);background:rgba(0,0,0,0.22);padding:0.75rem;cursor:pointer;transition:all 0.2s" onclick="focusCandidate('${candId}')">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem">
+                  <div style="display:flex;align-items:center;gap:0.4rem">
+                    <span style="font-size:0.75rem;font-weight:700;background:rgba(56,189,248,0.2);color:#38bdf8;padding:0.1rem 0.45rem;border-radius:4px">
+                      #${rank} Alternative
+                    </span>
+                    <span style="font-size:0.7rem;color:var(--text-muted);font-family:var(--font-mono)">
+                      ${cand.latitude?.toFixed(4)}°N, ${cand.longitude?.toFixed(4)}°E
+                    </span>
+                  </div>
+                  <strong style="color:#38bdf8;font-size:0.82rem">${scorePct}%</strong>
                 </div>
-                <strong style="color:${isRank1 ? '#10b981' : '#38bdf8'};font-size:0.85rem">${scorePct}%</strong>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.35rem;font-size:0.72rem;color:var(--text-secondary);margin-bottom:0.45rem">
+                  <div>Elevation: <strong style="color:#fff">${cand.elevation?.toFixed(1)} m</strong></div>
+                  <div>Catchment: <strong style="color:#34d399">${cHa} ha</strong></div>
+                  <div>Water: <strong style="color:#60a5fa">${cWater} m³</strong></div>
+                  <div>Channel Buffer: <strong style="color:#fff">~${Math.round(cand.distanceToChannelMeters || 0)} m</strong></div>
+                </div>
+
+                <button class="btn-sm-action" onclick="event.stopPropagation();focusCandidate('${candId}')" style="width:100%;background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.3);color:#38bdf8;padding:0.3rem;border-radius:5px;font-size:0.72rem;cursor:pointer">
+                  View Catchment on Map
+                </button>
               </div>
-
-              <div class="cand-grid-4">
-                <div class="cand-stat-box"><span class="cand-stat-lbl">Elevation</span><span class="cand-stat-val">${cand.elevation?.toFixed(1)} m</span></div>
-                <div class="cand-stat-box"><span class="cand-stat-lbl">Inflow Volume</span><span class="cand-stat-val blue">${cand.expectedVolumeM3?.toLocaleString() || '—'} m³</span></div>
-                <div class="cand-stat-box"><span class="cand-stat-lbl">Channel Buffer</span><span class="cand-stat-val">~${Math.round(cand.distanceToChannelMeters || 0)} m</span></div>
-                <div class="cand-stat-box"><span class="cand-stat-lbl">Upstream Flow</span><span class="cand-stat-val">${cand.flowAccumulation || 10} cells</span></div>
-              </div>
-
-              ${pros.length > 0 ? `
-                <div class="cand-pros-list">
-                  <span style="color:#34d399;font-weight:700;font-size:0.65rem;text-transform:uppercase">Advantages:</span>
-                  ${pros.slice(0, 2).map(p => `<div class="cand-pro-item"><span style="color:#10b981">✓</span><span>${p}</span></div>`).join('')}
-                </div>
-              ` : ''}
-
-              ${cons.length > 0 ? `
-                <div class="cand-pros-list">
-                  <span style="color:#fbbf24;font-weight:700;font-size:0.65rem;text-transform:uppercase">Trade-offs:</span>
-                  ${cons.slice(0, 1).map(c => `<div class="cand-con-item"><span style="color:#f59e0b">•</span><span>${c}</span></div>`).join('')}
-                </div>
-              ` : ''}
-
-              <button class="btn-focus-cand" onclick="event.stopPropagation();focusCandidate('${cand.id || 'candidate-' + (idx+1)}')">
-                Focus on Map &amp; Overview
-              </button>
-            </div>
-          `;
-        }).join('');
+            `;
+          }).join('');
+        } else {
+          altContainer.innerHTML = '<div style="font-size:0.75rem;color:var(--text-muted);padding:0.5rem">No additional candidates within this parcel.</div>';
+        }
       }
 
       // 2. Render Numbered Map Pins
@@ -1399,10 +1568,11 @@
     // Reset Analysis
     
     // Focus candidate function
-    function focusCandidate(candId) {
+        function focusCandidate(candId) {
       if (!state.candidateMarkers || !state.candidateMarkers[candId]) return;
       const target = state.candidateMarkers[candId];
       const cand = target.data;
+      state.activeCandidate = cand;
 
       // Center map on candidate
       map.flyTo([cand.latitude, cand.longitude], Math.max(map.getZoom(), 15), { duration: 0.8 });
@@ -1413,16 +1583,41 @@
       const activeRow = document.getElementById('cand-row-' + candId);
       if (activeRow) activeRow.classList.add('active-cand');
 
+      // Update active catchment layer on map
+      if (cand.catchment && cand.catchment.polygon) {
+        if (state.activeCatchmentLayer) {
+          map.removeLayer(state.activeCatchmentLayer);
+          state.activeCatchmentLayer = null;
+        }
+        state.activeCatchmentLayer = L.geoJSON(cand.catchment.polygon, {
+          style: { color: '#10b981', weight: 2.5, fillColor: '#059669', fillOpacity: 0.28, dashArray: '4,2' }
+        }).addTo(map);
+
+        state.activeCatchmentLayer.bindPopup(`
+          <div class="custom-map-popup">
+            <h4 style="color:#10b981">Upstream Catchment Basin (Candidate #${cand.rank || 1})</h4>
+            <p>Area: <strong>${(cand.catchmentAreaHectares || 10).toFixed(2)} ha</strong> (${(cand.catchmentAreaM2 || 100000).toLocaleString()} m²)</p>
+            <p style="color:#94a3b8;font-size:11px">Calculated using D8 Flow Direction Watershed Tracing</p>
+          </div>
+        `);
+      }
+
       // Update Overview tab with this candidate's metrics
       document.getElementById('res-score-pill').textContent = ((cand.suitabilityScore || 0.88) * 100).toFixed(1) + '% Suitability';
       document.getElementById('res-lat').textContent = (cand.latitude ? cand.latitude.toFixed(5) : '21.25') + '°N';
       document.getElementById('res-lng').textContent = (cand.longitude ? cand.longitude.toFixed(5) : '81.29') + '°E';
       document.getElementById('res-elev').textContent = (cand.elevation ? cand.elevation.toFixed(1) : '280.0') + ' m';
       document.getElementById('res-dist').textContent = '~' + Math.round(cand.distanceToChannelMeters || 45) + ' m';
+      document.getElementById('res-ha').innerHTML = `${(cand.catchmentAreaHectares || 10).toFixed(2)} <small style="font-size:0.8rem">ha</small>`;
+      document.getElementById('res-m2').textContent = `${(cand.catchmentAreaM2 || 100000).toLocaleString()} m²`;
+
       if (cand.expectedVolumeM3) {
         document.getElementById('res-water-m3').textContent = cand.expectedVolumeM3.toLocaleString() + ' m³';
         document.getElementById('res-water-liters').textContent = '= ' + ((cand.expectedVolumeM3 * 1000) / 1000000).toFixed(2) + ' Million Litres';
       }
+
+      // Recalculate simulator for current candidate area
+      recalcSimulator();
     }
 
     function resetAnalysis() {

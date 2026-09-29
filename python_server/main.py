@@ -72,6 +72,51 @@ def health_check():
     }
 
 
+@app.post("/api/parse-contours")
+async def parse_contours(
+    contour_map: Optional[UploadFile] = File(None),
+    file: Optional[UploadFile] = File(None)
+):
+    """
+    Fast contour parsing endpoint: returns vector contour lines and bounding metadata
+    so the map can render terrain contours immediately without triggering automated pond analysis.
+    """
+    upload = contour_map or file
+    if not upload or not upload.filename:
+        raise HTTPException(status_code=400, detail="No contour map file uploaded (expected .kml or .kmz)")
+
+    ext = upload.filename.lower().split(".")[-1]
+    if ext not in ["kml", "kmz"]:
+        raise HTTPException(status_code=400, detail="Invalid file type. Please upload a .kml or .kmz contour file")
+
+    file_bytes = await upload.read()
+    try:
+        parsed = parse_contour_file(file_bytes, upload.filename)
+        features = parsed["features"]
+        metadata = parsed["metadata"]
+
+        sampled_contours = features if len(features) <= 250 else features[::max(1, len(features) // 250)]
+        contour_geojson = {
+            "type": "FeatureCollection",
+            "features": sampled_contours
+        }
+
+        return {
+            "success": True,
+            "filename": upload.filename,
+            "metadata": metadata,
+            "bounds": {
+                "minLat": metadata.get("minLat", 21.2),
+                "maxLat": metadata.get("maxLat", 21.3),
+                "minLng": metadata.get("minLng", 81.2),
+                "maxLng": metadata.get("maxLng", 81.3)
+            },
+            "contours": contour_geojson
+        }
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=f"Failed to parse contours: {str(e)}")
+
+
 @app.post("/api/analyze-contour")
 async def analyze_contour(
     contour_map: Optional[UploadFile] = File(None),
@@ -109,7 +154,7 @@ async def analyze_contour(
         # Step 2: Build Terrain Model
         terrain_model = build_terrain_model(features, metadata, target_cell_count=35)
 
-        # Step 3: Select Pond Site (constrained to selected_area if supplied)
+        # Step 3: Select Pond Sites (constrained to selected_area if supplied)
         site_result = select_pond_site(
             terrain_model, metadata,
             selected_area=parsed_area,
@@ -118,41 +163,39 @@ async def analyze_contour(
         selected_site = site_result["selected"]
         candidates = site_result["candidates"]
 
-        # Step 4: Delineate Catchment for selected optimal site
-        catchment = delineate_catchment(terrain_model, selected_site)
+        # Step 4 & 5: Delineate Catchment and calculate Water Volume for EVERY candidate
+        catchment = None
+        water_volume = None
 
-        # Step 5: Calculate Expected Water Volume
-        catchment_area_m2 = catchment.get("areaSquareMeters", 0.0)
-        water_volume = calculate_water_volume(catchment_area_m2, rainfall_mm, runoff_coeff)
-        selected_site["waterVolume"] = water_volume
-        selected_site["expectedVolumeM3"] = water_volume["expectedVolumeM3"]
-
-        # Calculate water volume and catchment area for every candidate
-        cell_area = (terrain_model["cellSizeMeters"]) ** 2
         for cand in candidates:
-            if cand.get("rank") == 1:
-                cand["waterVolume"] = water_volume
-                cand["expectedVolumeM3"] = water_volume["expectedVolumeM3"]
-                cand["catchmentAreaM2"] = catchment_area_m2
-                cand["catchmentAreaHectares"] = round(catchment_area_m2 / 10000.0, 2)
-            else:
-                c_area = max(cand.get("estimatedCatchmentM2", 100.0), float(cand.get("flowAccumulation", 1)) * cell_area)
-                c_vol = calculate_water_volume(c_area, rainfall_mm, runoff_coeff)
-                cand["waterVolume"] = c_vol
-                cand["expectedVolumeM3"] = c_vol["expectedVolumeM3"]
-                cand["catchmentAreaM2"] = round(c_area, 2)
-                cand["catchmentAreaHectares"] = round(c_area / 10000.0, 2)
+            c_catchment = delineate_catchment(terrain_model, cand)
+            cand["catchment"] = c_catchment
+            c_area = c_catchment.get("areaSquareMeters", 0.0)
+            c_vol = calculate_water_volume(c_area, rainfall_mm, runoff_coeff)
+            cand["waterVolume"] = c_vol
+            cand["expectedVolumeM3"] = c_vol["expectedVolumeM3"]
+            cand["catchmentAreaM2"] = round(c_area, 2)
+            cand["catchmentAreaHectares"] = round(c_area / 10000.0, 2)
+
+            if cand.get("rank") == 1 or catchment is None:
+                catchment = c_catchment
+                water_volume = c_vol
+                selected_site["catchment"] = c_catchment
+                selected_site["waterVolume"] = c_vol
+                selected_site["expectedVolumeM3"] = c_vol["expectedVolumeM3"]
+                selected_site["catchmentAreaM2"] = round(c_area, 2)
+                selected_site["catchmentAreaHectares"] = round(c_area / 10000.0, 2)
 
         processing_time_ms = int((time.time() - start_time) * 1000)
 
-        # Format GeoJSON contours (sample up to 200 lines if too dense for fast browser rendering)
-        sampled_contours = features if len(features) <= 200 else features[::max(1, len(features) // 200)]
+        # Format GeoJSON contours (sample up to 250 lines if dense for fast browser rendering)
+        sampled_contours = features if len(features) <= 250 else features[::max(1, len(features) // 250)]
         contour_geojson = {
             "type": "FeatureCollection",
             "features": sampled_contours
         }
 
-        # Format Response
+        # Format Response (providing backward-compatible pondSite & catchment, plus pondCandidates & candidates)
         analysis_data = {
             "analysisId": str(uuid.uuid4()),
             "filename": upload.filename,
@@ -170,6 +213,7 @@ async def analyze_contour(
             },
             "pondSite": selected_site,
             "candidates": candidates,
+            "pondCandidates": candidates,
             "catchment": catchment,
             "waterVolume": water_volume,
             "selectedArea": parsed_area,
@@ -180,7 +224,6 @@ async def analyze_contour(
         col = get_collection()
         if col is not None:
             try:
-                # Save summary to DB (without huge contour geojson for space efficiency)
                 doc_to_save = dict(analysis_data)
                 doc_to_save.pop("contours", None)
                 col.insert_one(doc_to_save)
@@ -210,7 +253,7 @@ def recalculate_volume(req: VolumeRecalcRequest):
 
 
 @app.get("/api/analyses")
-def get_analyses(limit: int = Query(25, ge=1, le=100)):
+def list_analyses(limit: int = Query(20, ge=1, le=100)):
     col = get_collection()
     if col is None:
         return {"success": True, "count": 0, "analyses": []}
