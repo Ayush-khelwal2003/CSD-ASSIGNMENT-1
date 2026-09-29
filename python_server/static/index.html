@@ -1987,54 +1987,44 @@
       historyDrawer.classList.add('open');
       historyBackdrop.classList.add('open');
       const body = document.getElementById('history-list-body');
-      body.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:2rem">Querying MongoDB Atlas records...</div>';
+      body.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:2rem"><i data-lucide="loader" style="width:20px;height:20px;animation:spin 1s linear infinite;display:inline-block"></i><br><br>Loading analysis history...</div>';
+      lucide.createIcons();
 
       try {
         const res = await fetch('/api/analyses?limit=25');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
         if (data.analyses && data.analyses.length > 0) {
           state.history = data.analyses;
           body.innerHTML = data.analyses.map((item, idx) => {
-            const s = item.pondSite || {};
-            const c = item.catchment || {};
-            const w = item.waterVolume || {};
-            const dt = item.createdAt ? new Date(item.createdAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'Recent Run';
-            return `
-              <div class="card-box" style="display:flex;flex-direction:column;gap:0.45rem">
-                <div style="display:flex;justify-content:space-between;align-items:center">
-                  <strong style="color:#fff;font-size:0.85rem">${item.filename || 'Analysis'}</strong>
-                  <span style="font-size:0.68rem;font-weight:700;background:rgba(56,189,248,0.2);color:#38bdf8;padding:0.1rem 0.4rem;border-radius:4px">
-                    ${((s.suitabilityScore || 0.88) * 100).toFixed(0)}% Score
-                  </span>
-                </div>
-                <div style="font-size:0.72rem;color:var(--text-muted)">${dt}</div>
-                <div style="background:rgba(0,0,0,0.25);padding:0.45rem;border-radius:6px;font-size:0.75rem;display:flex;flex-direction:column;gap:2px">
-                  <div>📍 ${s.latitude?.toFixed(4)}°N, ${s.longitude?.toFixed(4)}°E (${s.elevation?.toFixed(1)}m)</div>
-                  <div>💧 Catchment: <strong style="color:#34d399">${c.areaHectares?.toFixed(2) || '12.4'} ha</strong></div>
-                  ${w.expectedVolumeM3 ? `<div>🌧️ Water Volume: <strong style="color:#60a5fa">${w.expectedVolumeM3.toLocaleString()} m³</strong></div>` : ''}
-                </div>
-                <div style="display:flex;gap:0.4rem;width:100%">
-                  <button class="btn-header" onclick="loadHistoryItem(${idx})" style="flex:1;justify-content:center;background:rgba(56,189,248,0.12);border-color:rgba(56,189,248,0.3);color:#38bdf8">
-                    <span>Load on Map</span>
-                    <i data-lucide="chevron-right" style="width:14px;height:14px"></i>
-                  </button>
-                  <button class="btn-header" onclick="deleteHistoryItem('${item.analysisId}', event)" title="Delete record" style="padding:4px 8px;background:rgba(239,68,68,0.12);border-color:rgba(239,68,68,0.3);color:#f87171">
-                    <i data-lucide="trash-2" style="width:14px;height:14px"></i>
-                  </button>
-                </div>
-              </div>
-            `;
+            const s = item.pondSite || (item.candidates && item.candidates[0]) || {};
+            const c = s.catchment || item.catchment || {};
+            const w = s.waterVolume || item.waterVolume || {};
+            const cands = item.candidates || item.pondCandidates || [];
+            const dt = item.createdAt
+              ? new Date(item.createdAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })
+              : 'Recent Run';
+            const score = ((s.suitabilityScore || 0.88) * 100).toFixed(0);
+            const lat = s.latitude ? s.latitude.toFixed(5) : '—';
+            const lng = s.longitude ? s.longitude.toFixed(5) : '—';
+            const elev = s.elevation ? s.elevation.toFixed(1) : '—';
+            const catchHa = (s.catchmentAreaHectares || c.areaHectares || c.area_ha || 0).toFixed(2);
+            const vol = (w.expectedVolumeM3 || s.expectedVolumeM3 || 0).toLocaleString(undefined, {maximumFractionDigits: 0});
+            return ;
           }).join('');
           lucide.createIcons();
         } else {
-          body.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:2rem">No historical analysis records found.</div>';
+          body.innerHTML = '<div style="text-align:center;padding:2rem"><i data-lucide="inbox" style="width:32px;height:32px;color:var(--text-muted);display:block;margin:0 auto 0.75rem"></i><div style="color:var(--text-muted);font-size:0.85rem">No historical analysis records found.</div><div style="color:var(--text-muted);font-size:0.72rem;margin-top:4px">Complete an analysis first, then it will appear here.</div></div>';
+          lucide.createIcons();
         }
       } catch (err) {
-        body.innerHTML = '<div style="text-align:center;color:#f87171;padding:2rem">Failed to load history from database.</div>';
+        console.error('History load error:', err);
+        body.innerHTML = '<div style="text-align:center;color:#f87171;padding:2rem"><i data-lucide="alert-circle" style="width:28px;height:28px;display:block;margin:0 auto 0.5rem"></i>Unable to load analysis history.<br><small style="color:var(--text-muted)">' + err.message + '</small></div>';
+        lucide.createIcons();
       }
     }
 
-    function closeHistory() {
+        function closeHistory() {
       historyDrawer.classList.remove('open');
       historyBackdrop.classList.remove('open');
     }
@@ -2054,8 +2044,14 @@
 
     window.loadHistoryItem = function(idx) {
       const item = state.history[idx];
-      if (!item) return;
+      if (!item) { console.warn('No history item at index', idx); return; }
       closeHistory();
+      // Show a banner that this is a restored analysis
+      const banner = document.createElement('div');
+      banner.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);background:rgba(56,189,248,0.95);color:#0f172a;padding:0.5rem 1.25rem;border-radius:8px;font-size:0.82rem;font-weight:700;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,0.5);transition:opacity 0.4s';
+      banner.textContent = '📂 Restored: ' + (item.filename || 'Previous Analysis') + ' — ' + new Date(item.createdAt || Date.now()).toLocaleString([], {dateStyle:'medium',timeStyle:'short'});
+      document.body.appendChild(banner);
+      setTimeout(() => { banner.style.opacity = '0'; setTimeout(() => banner.remove(), 500); }, 3000);
       renderAnalysisResults(item);
     };
 

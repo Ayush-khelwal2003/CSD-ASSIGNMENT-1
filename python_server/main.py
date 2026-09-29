@@ -261,7 +261,7 @@ async def analyze_contour(
         if col is not None:
             try:
                 col.insert_one(doc_to_save)
-                print(f"✅ Successfully persisted analysis {doc_to_save.get(analysisId)} to MongoDB Atlas")
+                print(f"✅ Successfully persisted analysis {doc_to_save.get("analysisId")} to MongoDB Atlas")
             except Exception as db_err:
                 print(f"Failed to persist to MongoDB: {db_err}")
 
