@@ -615,13 +615,20 @@
             <p style="font-size:0.82rem;color:var(--text-muted)">Upload KML/KMZ elevation contours to delineate catchments and calculate optimal village pond sites.</p>
           </div>
 
-          <div class="drop-zone" id="drop-zone">
-            <input type="file" id="file-input" accept=".kml,.kmz" style="display:none" />
+          <!-- HIDDEN FILE INPUT (Positioned outside drop-zone to prevent bubbling recursion) -->
+          <input 
+            type="file" 
+            id="file-input" 
+            accept=".kml,.kmz,application/vnd.google-earth.kml+xml,application/vnd.google-earth.kmz,application/zip,application/octet-stream" 
+            style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0;opacity:0" 
+          />
+
+          <div class="drop-zone" id="drop-zone" tabindex="0" role="button" aria-label="Upload contour map file">
             <div id="drop-zone-content">
-              <i data-lucide="upload-cloud" style="width:44px;height:44px;color:#38bdf8;margin-bottom:0.5rem"></i>
-              <div style="font-size:0.95rem;font-weight:600">Drag &amp; drop contour map here</div>
-              <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.2rem">Supports <strong>.kml</strong> or <strong>.kmz</strong> elevation files</div>
-              <span class="browse-pill">Browse File</span>
+              <i data-lucide="upload-cloud" style="width:44px;height:44px;color:#38bdf8;margin-bottom:0.5rem;pointer-events:none"></i>
+              <div style="font-size:0.95rem;font-weight:600;pointer-events:none">Drag &amp; drop contour map here</div>
+              <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.2rem;pointer-events:none">Supports <strong>.kml</strong> or <strong>.kmz</strong> elevation vector data</div>
+              <button type="button" class="browse-pill" id="browse-file-btn" style="pointer-events:auto;cursor:pointer;border:none">Browse File</button>
             </div>
           </div>
 
@@ -1177,33 +1184,99 @@
     // File Upload Handling
     const dropZone = document.getElementById('drop-zone');
     const fileInput = document.getElementById('file-input');
+    const browseBtn = document.getElementById('browse-file-btn');
 
-    dropZone.addEventListener('click', () => fileInput.click());
-    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('active'); });
-    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('active'));
-    dropZone.addEventListener('drop', (e) => {
-      e.preventDefault(); dropZone.classList.remove('active');
-      if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
-    });
+    function openFileChooser(e) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      fileInput.value = ''; // Clear value so selecting the same file fires change event
+      fileInput.click();
+    }
+
+    if (browseBtn) {
+      browseBtn.addEventListener('click', openFileChooser);
+    }
+
+    if (dropZone) {
+      dropZone.addEventListener('click', (e) => {
+        if (e.target !== browseBtn) {
+          openFileChooser(e);
+        }
+      });
+      dropZone.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openFileChooser(e);
+        }
+      });
+      dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.add('active');
+      });
+      dropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.remove('active');
+      });
+      dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.remove('active');
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+          handleFile(e.dataTransfer.files[0]);
+        }
+      });
+    }
+
     fileInput.addEventListener('change', (e) => {
-      if (e.target.files[0]) handleFile(e.target.files[0]);
+      if (e.target.files && e.target.files[0]) {
+        handleFile(e.target.files[0]);
+      }
     });
 
         async function handleFile(file) {
+      if (!file) return;
       const ext = file.name.split('.').pop().toLowerCase();
       if (ext !== 'kml' && ext !== 'kmz') {
-        alert('Please upload a .kml or .kmz contour file');
+        alert('Please select a KML or KMZ contour file (.kml, .kmz).');
         return;
       }
       state.selectedFile = file;
       dropZone.classList.add('has-file');
+      const sizeStr = file.size > 1048576 
+        ? (file.size / 1048576).toFixed(2) + ' MB'
+        : (file.size / 1024).toFixed(1) + ' KB';
+      
       document.getElementById('drop-zone-content').innerHTML = `
-        <i data-lucide="file-check" style="width:36px;height:36px;color:#10b981;margin-bottom:0.35rem"></i>
-        <div style="font-size:0.95rem;font-weight:600;color:#fff">${file.name}</div>
-        <div style="font-size:0.75rem;color:var(--text-muted)">${(file.size / 1048576).toFixed(2)} MB • <span style="color:#34d399">Contour Vector Loaded</span></div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:0.75rem;padding:0.25rem 0">
+          <div style="width:40px;height:40px;border-radius:10px;background:rgba(16,185,129,0.2);border:1px solid rgba(16,185,129,0.4);display:flex;align-items:center;justify-content:center;color:#34d399">
+            <i data-lucide="file-check" style="width:22px;height:22px"></i>
+          </div>
+          <div style="text-align:left;flex:1">
+            <div style="font-size:0.9rem;font-weight:700;color:#fff;word-break:break-all">${file.name}</div>
+            <div style="font-size:0.72rem;color:var(--text-muted);display:flex;gap:0.5rem;margin-top:2px">
+              <span>${sizeStr}</span>
+              <span style="color:#38bdf8;font-weight:600;text-transform:uppercase">${ext} Vector</span>
+              <span style="color:#34d399">✓ Valid Contour Map</span>
+            </div>
+          </div>
+          <button type="button" class="badge-clear-btn" id="replace-file-btn" title="Choose a different file" style="padding:4px 8px;background:rgba(255,255,255,0.08);border-radius:6px;color:#94a3b8;cursor:pointer">
+            <i data-lucide="refresh-cw" style="width:14px;height:14px"></i>
+          </button>
+        </div>
       `;
       lucide.createIcons();
-      document.getElementById('analyze-btn').disabled = false;
+      document.getElementById('replace-file-btn')?.addEventListener('click', openFileChooser);
+
+      if (state.selectedArea) {
+        document.getElementById('analyze-btn').disabled = false;
+        document.getElementById('analyze-btn-text').textContent = 'Analyze Selected Land Area';
+      } else {
+        document.getElementById('analyze-btn-text').textContent = 'Select Land Area to Analyze';
+      }
 
       // Immediately render contours on satellite map
       try {

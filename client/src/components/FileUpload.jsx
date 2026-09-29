@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   UploadCloud, 
   FileCheck, 
@@ -9,7 +9,8 @@ import {
   Crop, 
   HelpCircle,
   FileCode2,
-  Sparkles
+  Sparkles,
+  RefreshCw
 } from 'lucide-react';
 
 const FileUpload = ({ 
@@ -21,6 +22,7 @@ const FileUpload = ({
 }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef(null);
   
   // Hydrological inputs
   const [rainfallMm, setRainfallMm] = useState(100);
@@ -41,24 +43,35 @@ const FileUpload = ({
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
       validateAndSetFile(e.dataTransfer.files[0]);
     }
   };
 
   const handleChange = (e) => {
-    e.preventDefault();
     if (e.target.files && e.target.files[0]) {
       validateAndSetFile(e.target.files[0]);
     }
   };
 
+  const openFileChooser = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''; // Reset so re-selecting same file fires onChange
+      fileInputRef.current.click();
+    }
+  };
+
   const validateAndSetFile = (file) => {
+    if (!file) return;
     const ext = file.name.split('.').pop().toLowerCase();
     if (ext === 'kml' || ext === 'kmz') {
       setSelectedFile(file);
     } else {
-      alert('Please upload a valid .kml or .kmz contour file');
+      alert('Please select a KML or KMZ contour file (.kml, .kmz).');
     }
   };
 
@@ -71,7 +84,7 @@ const FileUpload = ({
     <div className="upload-container">
       <div className="upload-header">
         <h2>Topographic Ingestion</h2>
-        <p>Upload KML/KMZ elevation contours to delineate catchments and identify optimal village pond sites.</p>
+        <p>Upload KML/KMZ elevation contours to delineate catchments and calculate optimal village pond sites.</p>
       </div>
 
       {error && (
@@ -81,76 +94,89 @@ const FileUpload = ({
         </div>
       )}
 
-      {/* Drag & Drop File Zone */}
-      <form onDragEnter={handleDrag} onSubmit={(e) => e.preventDefault()}>
-        <input 
-          type="file" 
-          id="file-upload" 
-          accept=".kml,.kmz" 
-          onChange={handleChange} 
-          style={{ display: 'none' }} 
-        />
-        <label 
-          htmlFor="file-upload" 
-          className={`drop-zone ${dragActive ? "active" : ""} ${selectedFile ? "has-file" : ""}`}
-          onDragEnter={handleDrag}
-          onDragLeave={handleDrag}
-          onDragOver={handleDrag}
-          onDrop={handleDrop}
-        >
-          {selectedFile ? (
-            <div className="file-info-box">
-              <FileCheck className="upload-icon-success" size={40} />
-              <div className="file-name">{selectedFile.name}</div>
-              <div className="file-meta">
-                <span>{(selectedFile.size / (1024 * 1024)).toFixed(2)} MB</span>
-                <span className="file-badge">.{selectedFile.name.split('.').pop().toUpperCase()}</span>
-              </div>
-              <div className="file-change-hint">Click or drag another file to replace</div>
-            </div>
-          ) : (
-            <div className="drop-zone-placeholder">
-              <UploadCloud className="upload-icon" size={48} />
-              <div className="upload-text">Drag & drop contour map file</div>
-              <div className="upload-subtext">Supports <strong>.kml</strong> or <strong>.kmz</strong> elevation vector data</div>
-              <span className="browse-pill">Browse Files</span>
-            </div>
-          )}
-        </label>
-      </form>
+      {/* Hidden File Input placed outside drop-zone */}
+      <input 
+        ref={fileInputRef}
+        type="file" 
+        id="file-upload" 
+        accept=".kml,.kmz,application/vnd.google-earth.kml+xml,application/vnd.google-earth.kmz,application/zip,application/octet-stream" 
+        onChange={handleChange} 
+        style={{ display: 'none' }} 
+      />
 
-      {/* Target Land Area Selection Notice */}
+      {/* Drag & Drop File Zone */}
+      <div 
+        className={`drop-zone ${dragActive ? "active" : ""} ${selectedFile ? "has-file" : ""}`}
+        onClick={openFileChooser}
+        onDragEnter={handleDrag}
+        onDragLeave={handleDrag}
+        onDragOver={handleDrag}
+        onDrop={handleDrop}
+        role="button"
+        tabIndex={0}
+      >
+        {selectedFile ? (
+          <div className="file-info-box">
+            <FileCheck className="upload-icon-success" size={40} />
+            <div className="file-name">{selectedFile.name}</div>
+            <div className="file-meta">
+              <span>{(selectedFile.size / (1024 * 1024)).toFixed(2)} MB</span>
+              <span className="file-badge">.{selectedFile.name.split('.').pop().toUpperCase()}</span>
+              <span style={{ color: '#34d399', fontSize: '0.75rem', fontWeight: 600 }}>✓ Valid Vector</span>
+            </div>
+            <button 
+              type="button" 
+              className="file-change-hint" 
+              onClick={openFileChooser}
+              style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', marginTop: '4px' }}
+            >
+              Click to replace file
+            </button>
+          </div>
+        ) : (
+          <div className="drop-zone-placeholder">
+            <UploadCloud className="upload-icon" size={48} style={{ pointerEvents: 'none' }} />
+            <div className="upload-text" style={{ pointerEvents: 'none' }}>Drag &amp; drop contour map file</div>
+            <div className="upload-subtext" style={{ pointerEvents: 'none' }}>Supports <strong>.kml</strong> or <strong>.kmz</strong> elevation vector data</div>
+            <button type="button" className="browse-pill" onClick={openFileChooser}>Browse File</button>
+          </div>
+        )}
+      </div>
+
+      {/* Target Land Area Selection Status Card */}
       <div className={`land-selection-card ${selectedArea ? 'selected' : ''}`}>
         <div className="card-header">
           <div className="card-title">
-            <Crop size={16} />
+            <Crop size={16} style={{ color: '#f59e0b' }} />
             <span>Target Land Selection</span>
           </div>
-          {selectedArea && <span className="status-tag">Active</span>}
+          <span className="status-tag" style={{ color: selectedArea ? '#f59e0b' : 'var(--text-muted)' }}>
+            {selectedArea ? 'Selected' : 'Pending'}
+          </span>
         </div>
         
         {selectedArea ? (
           <div className="selected-area-summary">
             <div className="area-stat">
               <span className="lbl">Selected Area:</span>
-              <span className="val">{selectedArea.areaHectares} hectares</span>
+              <span className="val" style={{ color: '#fbbf24', fontWeight: 700 }}>{selectedArea.areaHectares} hectares</span>
             </div>
             <div className="area-stat">
-              <span className="lbl">Square Meters:</span>
+              <span className="lbl">Square Metres:</span>
               <span className="val">{selectedArea.areaSquareMeters.toLocaleString()} m²</span>
             </div>
             <p className="area-note">Pond placement and analysis will be constrained to this parcel.</p>
           </div>
         ) : (
           <div className="no-selection-box">
-            <p>Optional: Draw a custom land parcel directly on the map to constrain the pond siting.</p>
+            <p>No land area selected. Use <strong>Select Land Area</strong> and drag a rectangle on the map.</p>
             <button
               type="button"
               className={`btn-secondary-sm ${isSelectingArea ? 'active' : ''}`}
               onClick={() => setIsSelectingArea(!isSelectingArea)}
             >
               <Crop size={14} />
-              {isSelectingArea ? 'Cancel Drawing' : 'Draw Land Area on Map'}
+              {isSelectingArea ? 'Cancel Drawing' : 'Select Land Area'}
             </button>
           </div>
         )}
@@ -191,7 +217,7 @@ const FileUpload = ({
               <input 
                 type="range" 
                 min="20" 
-                max="500" 
+                max="400" 
                 step="5" 
                 value={rainfallMm} 
                 onChange={(e) => setRainfallMm(Number(e.target.value))}
@@ -240,7 +266,7 @@ const FileUpload = ({
         disabled={!selectedFile}
       >
         <Sparkles size={18} />
-        {selectedArea ? 'Analyze Selected Land Area' : 'Analyze Full Terrain Model'}
+        {selectedArea ? 'Analyze Selected Land Area' : 'Select Land Area to Analyze'}
       </button>
 
       {/* Demo helper */}
