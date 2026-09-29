@@ -14,7 +14,6 @@ import {
 import FileUpload from './components/FileUpload';
 import ResultsPanel from './components/ResultsPanel';
 import MapView from './components/MapView';
-import HistoryDrawer from './components/HistoryDrawer';
 import { analyzeContour, parseContours, getHealth } from './services/api';
 
 function App() {
@@ -30,7 +29,6 @@ function App() {
 
   const [selectedArea, setSelectedArea] = useState(null);
   const [isSelectingArea, setIsSelectingArea] = useState(false);
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [backendStatus, setBackendStatus] = useState('checking'); // 'online' | 'offline' | 'checking'
   const [activeCandidateId, setActiveCandidateId] = useState(null);
 
@@ -168,15 +166,6 @@ function App() {
             <span>{isSelectingArea ? 'Cancel Draw' : 'Select Land Area'}</span>
           </button>
 
-          {/* Action: Analysis History */}
-          <button 
-            className="btn-header"
-            onClick={() => setIsHistoryOpen(true)}
-            title="View previous analysis records"
-          >
-            <History size={16} />
-            <span>Analysis History</span>
-          </button>
 
           {/* Action: New Analysis Reset */}
           {(result || contourData) && (

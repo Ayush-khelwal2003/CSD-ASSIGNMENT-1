@@ -668,10 +668,7 @@
           <span id="draw-btn-text">Select Land Area</span>
         </button>
 
-        <button class="btn-header" id="open-history-btn" title="View historical analysis runs">
-          <i data-lucide="history" style="width:16px;height:16px"></i>
-          <span>Analysis History</span>
-        </button>
+
 
         <button class="btn-header btn-highlight" id="new-analysis-btn" style="display:none" title="Start new analysis">
           <i data-lucide="rotate-ccw" style="width:16px;height:16px"></i>
@@ -986,25 +983,7 @@
       </section>
     </main>
 
-    <!-- HISTORY DRAWER -->
-    <div class="history-backdrop" id="history-backdrop"></div>
-    <div class="history-drawer" id="history-drawer">
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:1.25rem 1.5rem;border-bottom:1px solid var(--border)">
-        <div style="display:flex;align-items:center;gap:0.5rem">
-          <i data-lucide="history" style="width:20px;height:20px;color:#38bdf8"></i>
-          <h3 style="font-size:1.15rem">Analysis History</h3>
-        </div>
-        <button class="btn-header" id="close-history-btn" style="padding:4px 8px">
-          <i data-lucide="x" style="width:18px;height:18px"></i>
-        </button>
-      </div>
-      <div id="history-list-body" style="flex:1;overflow-y:auto;padding:1.25rem;display:flex;flex-direction:column;gap:0.85rem">
-        <div style="text-align:center;color:var(--text-muted);padding:2rem">Loading records from MongoDB Atlas...</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- APPLICATION JAVASCRIPT -->
+      <!-- APPLICATION JAVASCRIPT -->
   <script>
     // State
     let state = {
@@ -1979,85 +1958,6 @@
     simRf.addEventListener('input', recalcSimulator);
     simRo.addEventListener('input', recalcSimulator);
 
-    // History Drawer
-    const historyDrawer = document.getElementById('history-drawer');
-    const historyBackdrop = document.getElementById('history-backdrop');
-
-    async function openHistory() {
-      historyDrawer.classList.add('open');
-      historyBackdrop.classList.add('open');
-      const body = document.getElementById('history-list-body');
-      body.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:2rem"><i data-lucide="loader" style="width:20px;height:20px;animation:spin 1s linear infinite;display:inline-block"></i><br><br>Loading analysis history...</div>';
-      lucide.createIcons();
-
-      try {
-        const res = await fetch('/api/analyses?limit=25');
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const data = await res.json();
-        if (data.analyses && data.analyses.length > 0) {
-          state.history = data.analyses;
-          body.innerHTML = data.analyses.map((item, idx) => {
-            const s = item.pondSite || (item.candidates && item.candidates[0]) || {};
-            const c = s.catchment || item.catchment || {};
-            const w = s.waterVolume || item.waterVolume || {};
-            const cands = item.candidates || item.pondCandidates || [];
-            const dt = item.createdAt
-              ? new Date(item.createdAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })
-              : 'Recent Run';
-            const score = ((s.suitabilityScore || 0.88) * 100).toFixed(0);
-            const lat = s.latitude ? s.latitude.toFixed(5) : '—';
-            const lng = s.longitude ? s.longitude.toFixed(5) : '—';
-            const elev = s.elevation ? s.elevation.toFixed(1) : '—';
-            const catchHa = (s.catchmentAreaHectares || c.areaHectares || c.area_ha || 0).toFixed(2);
-            const vol = (w.expectedVolumeM3 || s.expectedVolumeM3 || 0).toLocaleString(undefined, {maximumFractionDigits: 0});
-            return ;
-          }).join('');
-          lucide.createIcons();
-        } else {
-          body.innerHTML = '<div style="text-align:center;padding:2rem"><i data-lucide="inbox" style="width:32px;height:32px;color:var(--text-muted);display:block;margin:0 auto 0.75rem"></i><div style="color:var(--text-muted);font-size:0.85rem">No historical analysis records found.</div><div style="color:var(--text-muted);font-size:0.72rem;margin-top:4px">Complete an analysis first, then it will appear here.</div></div>';
-          lucide.createIcons();
-        }
-      } catch (err) {
-        console.error('History load error:', err);
-        body.innerHTML = '<div style="text-align:center;color:#f87171;padding:2rem"><i data-lucide="alert-circle" style="width:28px;height:28px;display:block;margin:0 auto 0.5rem"></i>Unable to load analysis history.<br><small style="color:var(--text-muted)">' + err.message + '</small></div>';
-        lucide.createIcons();
-      }
-    }
-
-        function closeHistory() {
-      historyDrawer.classList.remove('open');
-      historyBackdrop.classList.remove('open');
-    }
-
-        window.deleteHistoryItem = async function(analysisId, event) {
-      if (event) event.stopPropagation();
-      if (!confirm("Are you sure you want to delete this historical analysis?")) return;
-      try {
-        const res = await fetch("/api/analyses/" + analysisId, { method: "DELETE" });
-        if (res.ok) {
-          openHistory();
-        }
-      } catch (err) {
-        alert("Could not delete record: " + err.message);
-      }
-    };
-
-    window.loadHistoryItem = function(idx) {
-      const item = state.history[idx];
-      if (!item) { console.warn('No history item at index', idx); return; }
-      closeHistory();
-      // Show a banner that this is a restored analysis
-      const banner = document.createElement('div');
-      banner.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);background:rgba(56,189,248,0.95);color:#0f172a;padding:0.5rem 1.25rem;border-radius:8px;font-size:0.82rem;font-weight:700;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,0.5);transition:opacity 0.4s';
-      banner.textContent = '📂 Restored: ' + (item.filename || 'Previous Analysis') + ' — ' + new Date(item.createdAt || Date.now()).toLocaleString([], {dateStyle:'medium',timeStyle:'short'});
-      document.body.appendChild(banner);
-      setTimeout(() => { banner.style.opacity = '0'; setTimeout(() => banner.remove(), 500); }, 3000);
-      renderAnalysisResults(item);
-    };
-
-    document.getElementById('open-history-btn').addEventListener('click', openHistory);
-    document.getElementById('close-history-btn').addEventListener('click', closeHistory);
-    document.getElementById('history-backdrop').addEventListener('click', closeHistory);
   </script>
 </body>
 </html>

@@ -13,8 +13,9 @@
 ## 🚀 Live Production & Demo URLs
 
 - **GitHub Repository:** [https://github.com/Ayush-khelwal2003/CSD-ASSIGNMENT-1](https://github.com/Ayush-khelwal2003/CSD-ASSIGNMENT-1)
+- **Public Production HTTPS URL:** [https://919b67f9f7a781.lhr.life](https://919b67f9f7a781.lhr.life)
+- **Production API Health:** [https://919b67f9f7a781.lhr.life/api/health](https://919b67f9f7a781.lhr.life/api/health)
 - **Local Development URL:** `http://localhost:5000` (or `http://10.1.75.51:5000` inside campus network)
-- **Production API Health:** `/api/health`
 
 ---
 
@@ -28,7 +29,7 @@
 6. **🏆 Highlighted Best Pond Site:** Candidate #1 is visually distinguished with an animated gold glow pulse, trophy badge, elevated z-index, and comprehensive suitability breakdown.
 7. **Hydrological Catchment Basins:** Recursive reverse-D8 drainage tracing generates candidate-specific watershed polygons.
 8. **Water Volume Simulation:** Calculates harvest volume using the rational equation $V = A \times P \times C$ with real-time sliders for rainfall and runoff coefficients.
-9. **Analysis History Drawer:** Stores every completed run in MongoDB Atlas with single-click dashboard restoration.
+9. **Persistent MongoDB Atlas Storage:** Automatically writes structured GIS analysis summaries to MongoDB Atlas for cloud auditability with local JSON redundancy.
 10. **Zero-Bloat Single Service:** FastAPI serves both the high-performance GIS computation engine and the sleek frontend dashboard.
 
 ---

@@ -20,7 +20,7 @@
 
 ## 2. Abstract / Project Overview
 
-This project provides an interactive spatial decision support system for village pond placement using real-world topographic contour data and satellite imagery. The system ingests contour maps in KML/KMZ formats, constructs a digital elevation model (DEM) via Triangular Irregular Network (TIN) interpolation, applies the D8 hydrological routing model to simulate surface flow, and proposes optimal village pond sites. In Phase 3, users interactively select land parcels by dragging a rectangle on an Esri high-resolution satellite basemap. The system returns the top 5 spatially diverse pond candidates constrained strictly within the selected parcel. The #1 recommended site is strongly highlighted with a gold trophy marker, pulsating glow rings, and dynamic candidate-specific catchment delineation. Completed analyses are persisted to MongoDB Atlas and viewable through a native Analysis History drawer.
+This project provides an interactive spatial decision support system for village pond placement using real-world topographic contour data and satellite imagery. The system ingests contour maps in KML/KMZ formats, constructs a digital elevation model (DEM) via Triangular Irregular Network (TIN) interpolation, applies the D8 hydrological routing model to simulate surface flow, and proposes optimal village pond sites. In Phase 3, users interactively select land parcels by dragging a rectangle on an Esri high-resolution satellite basemap. The system returns the top 5 spatially diverse pond candidates constrained strictly within the selected parcel. The #1 recommended site is strongly highlighted with a gold trophy marker, pulsating glow rings, and dynamic candidate-specific catchment delineation. Completed analyses are persisted to MongoDB Atlas and persisted automatically for audit and verification.
 
 ---
 
@@ -85,7 +85,7 @@ The application adopts a decoupled, high-performance architecture:
 The frontend is implemented as a single, highly responsive, zero-bloat dashboard:
 - **Left Panel:** File ingestion drop zone, land selection toggles, candidate ranking cards, and rainfall simulator sliders.
 - **Right Panel:** Leaflet GIS map with Esri satellite imagery, real-time bounding box drawing previews, contour polyline overlays, and custom interactive HTML marker pins.
-- **Top Bar:** System branding, live server/database health indicator pills, action controls, and an Analysis History drawer trigger.
+- **Top Bar:** System branding, live server/database health indicator pills, action controls, and high-visibility land area selection triggers.
 - **Design Aesthetic:** Deep dark-mode palette (`#070b14` to `#0f172a`), backdrop filters with glassmorphic cards (`rgba(15,23,42,0.82)`), cyan/emerald accent highlights, and clean typography.
 
 ---
@@ -216,7 +216,7 @@ Candidate #1 is visually emphasized over all other markers:
 7. Dashboard updates: Best Pond marker glows, alternative pins appear, and results populate.
 8. User switches between candidates to compare catchments and water capacities.
 9. Analysis run is automatically recorded into MongoDB Atlas.
-10. User opens "Analysis History" to review, restore, or delete previous analyses.
+10. Top navigation provides a streamlined interface focusing on parcel selection, active analysis execution, and clear visualization.
 
 ---
 
