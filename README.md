@@ -13,8 +13,8 @@
 ## 🚀 Live Production & Demo URLs
 
 - **GitHub Repository:** [https://github.com/Ayush-khelwal2003/CSD-ASSIGNMENT-1](https://github.com/Ayush-khelwal2003/CSD-ASSIGNMENT-1)
-- **Public Production HTTPS URL:** [https://919b67f9f7a781.lhr.life](https://919b67f9f7a781.lhr.life)
-- **Production API Health:** [https://919b67f9f7a781.lhr.life/api/health](https://919b67f9f7a781.lhr.life/api/health)
+- **Public Production HTTPS URL:** [https://714317f640b2f2.lhr.life](https://714317f640b2f2.lhr.life)
+- **Production API Health:** [https://714317f640b2f2.lhr.life/api/health](https://714317f640b2f2.lhr.life/api/health)
 - **Local Development URL:** `http://localhost:5000` (or `http://10.1.75.51:5000` inside campus network)
 
 ---
