@@ -1,11 +1,33 @@
-import React, { useCallback, useState } from 'react';
-import { UploadCloud, File, AlertCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { 
+  UploadCloud, 
+  FileCheck, 
+  AlertCircle, 
+  Sliders, 
+  Droplets, 
+  CloudRain, 
+  Crop, 
+  HelpCircle,
+  FileCode2,
+  Sparkles
+} from 'lucide-react';
 
-const FileUpload = ({ onUpload, error }) => {
-  const [dragActive, setDragActive] = useState(false);
+const FileUpload = ({ 
+  onUpload, 
+  error, 
+  selectedArea, 
+  isSelectingArea, 
+  setIsSelectingArea 
+}) => {
   const [selectedFile, setSelectedFile] = useState(null);
+  const [dragActive, setDragActive] = useState(false);
+  
+  // Hydrological inputs
+  const [rainfallMm, setRainfallMm] = useState(100);
+  const [runoffCoeff, setRunoffCoeff] = useState(0.70);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
-  const handleDrag = useCallback((e) => {
+  const handleDrag = (e) => {
     e.preventDefault();
     e.stopPropagation();
     if (e.type === "dragenter" || e.type === "dragover") {
@@ -13,58 +35,53 @@ const FileUpload = ({ onUpload, error }) => {
     } else if (e.type === "dragleave") {
       setDragActive(false);
     }
-  }, []);
+  };
 
-  const handleDrop = useCallback((e) => {
+  const handleDrop = (e) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFile(e.dataTransfer.files[0]);
+      validateAndSetFile(e.dataTransfer.files[0]);
     }
-  }, []);
+  };
 
   const handleChange = (e) => {
     e.preventDefault();
     if (e.target.files && e.target.files[0]) {
-      handleFile(e.target.files[0]);
+      validateAndSetFile(e.target.files[0]);
     }
   };
 
-  const handleFile = (file) => {
+  const validateAndSetFile = (file) => {
     const ext = file.name.split('.').pop().toLowerCase();
     if (ext === 'kml' || ext === 'kmz') {
       setSelectedFile(file);
     } else {
-      alert("Please upload a .kml or .kmz file");
+      alert('Please upload a valid .kml or .kmz contour file');
     }
   };
 
-  const handleUploadClick = () => {
-    if (selectedFile) {
-      onUpload(selectedFile);
-    }
+  const handleStartAnalysis = () => {
+    if (!selectedFile) return;
+    onUpload(selectedFile, selectedArea, rainfallMm, runoffCoeff);
   };
 
   return (
     <div className="upload-container">
-      <div className="section-title">
-        <UploadCloud size={20} />
-        Upload Contour Map
+      <div className="upload-header">
+        <h2>Topographic Ingestion</h2>
+        <p>Upload KML/KMZ elevation contours to delineate catchments and identify optimal village pond sites.</p>
       </div>
-      
-      <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-        Upload a KML or KMZ file containing contour lines to analyze the terrain, identify a pond location, and delineate the catchment area.
-      </p>
 
       {error && (
         <div className="alert alert-error">
-          <AlertCircle size={20} style={{ flexShrink: 0 }} />
+          <AlertCircle size={18} style={{ flexShrink: 0 }} />
           <div>{error}</div>
         </div>
       )}
 
+      {/* Drag & Drop File Zone */}
       <form onDragEnter={handleDrag} onSubmit={(e) => e.preventDefault()}>
         <input 
           type="file" 
@@ -75,36 +92,162 @@ const FileUpload = ({ onUpload, error }) => {
         />
         <label 
           htmlFor="file-upload" 
-          className={`drop-zone ${dragActive ? "active" : ""}`}
+          className={`drop-zone ${dragActive ? "active" : ""} ${selectedFile ? "has-file" : ""}`}
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
           onDragOver={handleDrag}
           onDrop={handleDrop}
         >
           {selectedFile ? (
-            <>
-              <File className="upload-icon" />
-              <div className="upload-text">{selectedFile.name}</div>
-              <div className="upload-subtext">{(selectedFile.size / (1024 * 1024)).toFixed(2)} MB</div>
-            </>
+            <div className="file-info-box">
+              <FileCheck className="upload-icon-success" size={40} />
+              <div className="file-name">{selectedFile.name}</div>
+              <div className="file-meta">
+                <span>{(selectedFile.size / (1024 * 1024)).toFixed(2)} MB</span>
+                <span className="file-badge">.{selectedFile.name.split('.').pop().toUpperCase()}</span>
+              </div>
+              <div className="file-change-hint">Click or drag another file to replace</div>
+            </div>
           ) : (
-            <>
-              <UploadCloud className="upload-icon" />
-              <div className="upload-text">Drag & drop your file here</div>
-              <div className="upload-subtext">or click to browse (.kml, .kmz)</div>
-            </>
+            <div className="drop-zone-placeholder">
+              <UploadCloud className="upload-icon" size={48} />
+              <div className="upload-text">Drag & drop contour map file</div>
+              <div className="upload-subtext">Supports <strong>.kml</strong> or <strong>.kmz</strong> elevation vector data</div>
+              <span className="browse-pill">Browse Files</span>
+            </div>
           )}
         </label>
       </form>
 
+      {/* Target Land Area Selection Notice */}
+      <div className={`land-selection-card ${selectedArea ? 'selected' : ''}`}>
+        <div className="card-header">
+          <div className="card-title">
+            <Crop size={16} />
+            <span>Target Land Selection</span>
+          </div>
+          {selectedArea && <span className="status-tag">Active</span>}
+        </div>
+        
+        {selectedArea ? (
+          <div className="selected-area-summary">
+            <div className="area-stat">
+              <span className="lbl">Selected Area:</span>
+              <span className="val">{selectedArea.areaHectares} hectares</span>
+            </div>
+            <div className="area-stat">
+              <span className="lbl">Square Meters:</span>
+              <span className="val">{selectedArea.areaSquareMeters.toLocaleString()} m²</span>
+            </div>
+            <p className="area-note">Pond placement and analysis will be constrained to this parcel.</p>
+          </div>
+        ) : (
+          <div className="no-selection-box">
+            <p>Optional: Draw a custom land parcel directly on the map to constrain the pond siting.</p>
+            <button
+              type="button"
+              className={`btn-secondary-sm ${isSelectingArea ? 'active' : ''}`}
+              onClick={() => setIsSelectingArea(!isSelectingArea)}
+            >
+              <Crop size={14} />
+              {isSelectingArea ? 'Cancel Drawing' : 'Draw Land Area on Map'}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Hydrology & Water Harvesting Parameters */}
+      <div className="hydrology-settings-card">
+        <div className="card-header" onClick={() => setShowAdvanced(!showAdvanced)} style={{ cursor: 'pointer' }}>
+          <div className="card-title">
+            <CloudRain size={16} style={{ color: '#38bdf8' }} />
+            <span>Water Volume Parameters</span>
+          </div>
+          <button type="button" className="toggle-btn">
+            <Sliders size={14} />
+            {showAdvanced ? 'Hide' : 'Configure'}
+          </button>
+        </div>
+
+        <div className="params-preview">
+          <div className="param-chip">
+            <span>Rainfall:</span>
+            <strong>{rainfallMm} mm</strong>
+          </div>
+          <div className="param-chip">
+            <span>Runoff (C):</span>
+            <strong>{runoffCoeff}</strong>
+          </div>
+        </div>
+
+        {showAdvanced && (
+          <div className="params-expanded">
+            {/* Rainfall Depth */}
+            <div className="input-group">
+              <div className="input-label-row">
+                <label>Design Rainfall Depth (mm)</label>
+                <span className="val-display">{rainfallMm} mm</span>
+              </div>
+              <input 
+                type="range" 
+                min="20" 
+                max="500" 
+                step="5" 
+                value={rainfallMm} 
+                onChange={(e) => setRainfallMm(Number(e.target.value))}
+                className="slider-input"
+              />
+              <div className="preset-buttons">
+                <button type="button" onClick={() => setRainfallMm(50)} className={rainfallMm === 50 ? 'active' : ''}>Arid (50mm)</button>
+                <button type="button" onClick={() => setRainfallMm(100)} className={rainfallMm === 100 ? 'active' : ''}>Normal (100mm)</button>
+                <button type="button" onClick={() => setRainfallMm(200)} className={rainfallMm === 200 ? 'active' : ''}>Monsoon (200mm)</button>
+              </div>
+            </div>
+
+            {/* Runoff Coefficient */}
+            <div className="input-group">
+              <div className="input-label-row">
+                <label>Soil Runoff Coefficient (C)</label>
+                <span className="val-display">{runoffCoeff}</span>
+              </div>
+              <input 
+                type="range" 
+                min="0.10" 
+                max="0.95" 
+                step="0.05" 
+                value={runoffCoeff} 
+                onChange={(e) => setRunoffCoeff(Number(e.target.value))}
+                className="slider-input"
+              />
+              <div className="preset-buttons">
+                <button type="button" onClick={() => setRunoffCoeff(0.35)} className={runoffCoeff === 0.35 ? 'active' : ''}>Sandy (0.35)</button>
+                <button type="button" onClick={() => setRunoffCoeff(0.70)} className={runoffCoeff === 0.70 ? 'active' : ''}>Clay Loam (0.70)</button>
+                <button type="button" onClick={() => setRunoffCoeff(0.85)} className={runoffCoeff === 0.85 ? 'active' : ''}>Heavy Clay (0.85)</button>
+              </div>
+            </div>
+
+            <div className="formula-box">
+              <code>V (m³) = Area (m²) × (Rainfall / 1000) × C</code>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Main Analyze Button */}
       <button 
-        className="btn" 
-        onClick={handleUploadClick}
+        className="btn btn-primary" 
+        onClick={handleStartAnalysis}
         disabled={!selectedFile}
-        style={{ marginTop: '0.5rem' }}
       >
-        Analyze Terrain
+        <Sparkles size={18} />
+        {selectedArea ? 'Analyze Selected Land Area' : 'Analyze Full Terrain Model'}
       </button>
+
+      {/* Demo helper */}
+      <div className="demo-hint-box">
+        <FileCode2 size={15} />
+        <span>Ready with standard contour files (e.g. <code>contour_map.kml</code>)</span>
+      </div>
     </div>
   );
 };

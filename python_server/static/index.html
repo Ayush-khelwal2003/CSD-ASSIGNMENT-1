@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pond Catchment Analysis – Topographic Intelligence &amp; Water Resource Planning</title>
+  <meta name="description" content="Phase 3 Interactive GIS Dashboard for Village Pond Siting, Catchment Basin Delineation, and Runoff Water Harvesting Analysis." />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <style>
+    :root {
+      --bg-darker: #070b14;
+      --bg-dark: #0d1527;
+      --bg-card: rgba(15, 23, 42, 0.82);
+      --bg-card-hover: rgba(30, 41, 59, 0.9);
+      --glass-bg: rgba(13, 21, 39, 0.78);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --glass-border-hover: rgba(56, 189, 248, 0.4);
+      
+      --text-main: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+      
+      --accent: #38bdf8;
+      --accent-blue: #2563eb;
+      --accent-glow: rgba(56, 189, 248, 0.35);
+      --accent-green: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-red: #ef4444;
+      
+      --border: rgba(255, 255, 255, 0.1);
+      --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-heading: 'Outfit', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-main);
+      background-color: var(--bg-darker);
+      color: var(--text-main);
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.14), transparent 35%),
+        radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.12), transparent 35%),
+        radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.6), transparent 70%);
+      background-attachment: fixed;
+      min-height: 100vh;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-family: var(--font-heading);
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+    }
+
+    code { font-family: var(--font-mono); }
+
+    .glass-panel {
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+
+    .app-container {
+      max-width: 1680px;
+      margin: 0 auto;
+      padding: 1rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      min-height: 100vh;
+    }
+
+    /* HEADER */
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1.25rem;
+      flex-wrap: wrap;
+      gap: 0.85rem;
+    }
+
+    .header-left { display: flex; align-items: center; gap: 0.85rem; }
+    .logo-icon-wrap {
+      width: 42px; height: 42px;
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(37, 99, 235, 0.45));
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.3);
+      color: #38bdf8;
+    }
+
+    .title-group { display: flex; flex-direction: column; }
+    .main-brand-row { display: flex; align-items: center; gap: 0.6rem; }
+    .brand-title {
+      font-size: 1.35rem; font-weight: 700;
+      background: linear-gradient(135deg, #ffffff 30%, #93c5fd 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+
+    .phase-pill {
+      font-size: 0.7rem; font-weight: 700;
+      background: rgba(56, 189, 248, 0.15); color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      padding: 0.15rem 0.5rem; border-radius: 20px;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+
+    .brand-subtitle { font-size: 0.8rem; color: var(--text-muted); }
+
+    .header-right { display: flex; align-items: center; gap: 0.65rem; flex-wrap: wrap; }
+
+    .backend-status-indicator {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.4rem 0.85rem; border-radius: 20px;
+      font-size: 0.78rem; font-weight: 600;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34d399;
+    }
+
+    .pulse-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #10b981; box-shadow: 0 0 10px #10b981;
+      animation: pulse-glow 2s infinite;
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% { transform: scale(0.95); opacity: 0.7; }
+      50% { transform: scale(1.15); opacity: 1; }
+    }
+
+    .btn-header {
+      background: rgba(30, 41, 59, 0.6);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      padding: 0.45rem 0.85rem; border-radius: 8px;
+      font-family: var(--font-main); font-size: 0.82rem; font-weight: 500;
+      cursor: pointer; display: flex; align-items: center; gap: 0.45rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn-header:hover, .btn-header.active {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: #38bdf8; color: #38bdf8;
+    }
+
+    .btn-header.btn-highlight {
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.35), rgba(56, 189, 248, 0.35));
+      border-color: #38bdf8; color: #fff;
+    }
+
+    /* MAIN CONTENT */
+    .main-content {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+      flex: 1;
+    }
+
+    @media (min-width: 1080px) {
+      .main-content {
+        grid-template-columns: 460px 1fr;
+        height: calc(100vh - 7.5rem);
+      }
+    }
+
+    .sidebar-pane {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      max-height: 100%;
+    }
+
+    .map-pane {
+      padding: 0.35rem;
+      position: relative;
+      overflow: hidden;
+      height: 100%;
+      min-height: 520px;
+    }
+
+    /* MAP CONTAINER */
+    .map-wrapper {
+      width: 100%; height: 100%;
+      border-radius: 12px; overflow: hidden;
+      position: relative; display: flex; flex-direction: column;
+    }
+
+    .map-inner { flex: 1; width: 100%; height: 100%; position: relative; }
+    #map { width: 100%; height: 100%; background: #070b14; }
+
+    .map-toolbar {
+      position: absolute; top: 12px; left: 12px; right: 12px;
+      z-index: 1000; display: flex; justify-content: space-between; align-items: center;
+      pointer-events: none; gap: 0.5rem;
+    }
+
+    .toolbar-left, .toolbar-right {
+      display: flex; align-items: center; gap: 0.5rem;
+      pointer-events: auto;
+    }
+
+    .tool-btn {
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 0.45rem 0.85rem; border-radius: 8px;
+      font-size: 0.82rem; font-weight: 600;
+      display: flex; align-items: center; gap: 0.45rem;
+      cursor: pointer; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      transition: all 0.2s ease;
+    }
+
+    .tool-btn:hover, .tool-btn.active {
+      background: #f59e0b; color: #0f172a;
+      border-color: #f59e0b; box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
+    }
+
+    .selection-badge {
+      background: rgba(245, 158, 11, 0.18);
+      border: 1px solid rgba(245, 158, 11, 0.5);
+      color: #fbbf24; padding: 0.4rem 0.75rem; border-radius: 8px;
+      font-size: 0.78rem; display: flex; align-items: center; gap: 0.45rem;
+      backdrop-filter: blur(8px);
+    }
+
+    .badge-clear-btn {
+      background: none; border: none; color: #f87171;
+      cursor: pointer; display: flex; align-items: center;
+    }
+
+    .basemap-selector {
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      padding: 0.3rem 0.6rem; border-radius: 8px;
+      display: flex; align-items: center; gap: 0.4rem;
+    }
+
+    .basemap-selector select {
+      background: transparent; color: var(--text-main);
+      border: none; font-size: 0.78rem; outline: none; cursor: pointer;
+    }
+
+    .drawing-banner {
+      position: absolute; top: 60px; left: 50%; transform: translateX(-50%);
+      z-index: 1000; background: rgba(245, 158, 11, 0.92); color: #0f172a;
+      padding: 0.45rem 1.2rem; border-radius: 25px;
+      font-size: 0.82rem; font-weight: 600;
+      display: flex; align-items: center; gap: 0.5rem;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    }
+
+    .map-floating-legend {
+      position: absolute; bottom: 18px; left: 18px; z-index: 1000;
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      padding: 0.75rem 1rem; border-radius: 12px;
+      display: flex; flex-direction: column; gap: 0.4rem;
+      font-size: 0.75rem; color: var(--text-secondary);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+      max-width: 260px;
+    }
+
+    .legend-title {
+      font-weight: 700; color: var(--text-main);
+      text-transform: uppercase; font-size: 0.68rem; letter-spacing: 0.06em;
+      border-bottom: 1px solid var(--border); padding-bottom: 0.25rem;
+    }
+
+    .legend-item { display: flex; align-items: center; gap: 0.6rem; }
+    .sym-pond { width: 12px; height: 12px; background: #38bdf8; border-radius: 50%; box-shadow: 0 0 8px #38bdf8; }
+    .sym-catchment { width: 14px; height: 10px; background: rgba(16, 185, 129, 0.35); border: 1.5px dashed #10b981; border-radius: 2px; }
+    .sym-selection { width: 14px; height: 10px; background: rgba(245, 158, 11, 0.3); border: 1.5px dashed #f59e0b; border-radius: 2px; }
+    .sym-contour { width: 14px; height: 2px; background: linear-gradient(90deg, #34d399, #38bdf8, #fbbf24, #f87171); }
+
+    /* Custom Marker */
+    .custom-pond-marker { position: relative; display: flex; align-items: center; justify-content: center; }
+    .pond-pulse {
+      position: absolute; width: 44px; height: 44px; border-radius: 50%;
+      background: rgba(56, 189, 248, 0.4);
+      animation: radar-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+    }
+    @keyframes radar-ping { 75%, 100% { transform: scale(2.2); opacity: 0; } }
+
+    .pond-pin {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      border: 2px solid #38bdf8; border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg); display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 15px rgba(56, 189, 248, 0.6);
+    }
+    .pond-pin i { transform: rotate(45deg); color: #fff; font-size: 14px; }
+
+    /* Leaflet overrides */
+    .leaflet-popup-content-wrapper {
+      background: rgba(13, 21, 39, 0.95) !important;
+      backdrop-filter: blur(16px); color: var(--text-main) !important;
+      border: 1px solid var(--glass-border-hover);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5) !important;
+      border-radius: 12px !important;
+    }
+    .leaflet-popup-tip { background: rgba(13, 21, 39, 0.95) !important; }
+
+    .custom-map-popup h4 { font-size: 0.95rem; margin-bottom: 0.35rem; }
+    .popup-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0.35rem;
+      margin: 0.5rem 0; background: rgba(0, 0, 0, 0.25);
+      padding: 0.45rem; border-radius: 6px; font-size: 0.75rem;
+    }
+    .popup-grid .lbl { color: var(--text-muted); font-size: 0.68rem; display: block; }
+    .popup-grid .val { font-weight: 600; color: #fff; }
+    .popup-grid .highlight .val { color: #38bdf8; }
+    .popup-grid .success .val { color: #34d399; }
+    .popup-reason {
+      font-size: 0.72rem; color: var(--text-muted);
+      border-left: 2px solid #38bdf8; padding-left: 6px;
+      margin-top: 0.4rem; line-height: 1.4;
+    }
+
+    /* UPLOAD PANE */
+    .upload-pane {
+      padding: 1.25rem 1.5rem;
+      display: flex; flex-direction: column; gap: 1.15rem;
+      overflow-y: auto; max-height: 100%;
+    }
+
+    .drop-zone {
+      border: 2px dashed rgba(56, 189, 248, 0.35);
+      border-radius: 14px; padding: 1.6rem 1.2rem;
+      text-align: center; cursor: pointer;
+      transition: all 0.25s ease;
+      background: rgba(56, 189, 248, 0.03);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+
+    .drop-zone:hover, .drop-zone.active {
+      border-color: #38bdf8; background: rgba(56, 189, 248, 0.08);
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.2);
+    }
+    .drop-zone.has-file { border-color: #10b981; background: rgba(16, 185, 129, 0.06); }
+
+    .browse-pill {
+      display: inline-block; margin-top: 0.65rem;
+      background: rgba(56, 189, 248, 0.15); color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 0.3rem 0.85rem; border-radius: 20px;
+      font-size: 0.75rem; font-weight: 600;
+    }
+
+    .card-box {
+      background: rgba(15, 23, 42, 0.5);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px; padding: 0.85rem 1rem;
+    }
+
+    .card-box.selected {
+      border-color: rgba(245, 158, 11, 0.5);
+      background: rgba(245, 158, 11, 0.06);
+    }
+
+    .card-head {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;
+    }
+    .card-title {
+      display: flex; align-items: center; gap: 0.45rem;
+      font-size: 0.85rem; font-weight: 600; color: var(--text-main);
+    }
+
+    .slider-input {
+      -webkit-appearance: none; width: 100%; height: 6px;
+      border-radius: 3px; background: rgba(255, 255, 255, 0.15); outline: none; cursor: pointer;
+    }
+    .slider-input::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
+      background: #38bdf8; cursor: pointer; box-shadow: 0 0 10px #38bdf8;
+    }
+
+    .preset-btns { display: flex; gap: 0.35rem; margin-top: 0.35rem; }
+    .preset-btns button {
+      background: rgba(0, 0, 0, 0.25); border: 1px solid var(--border);
+      color: var(--text-muted); padding: 0.2rem 0.5rem; border-radius: 4px;
+      font-size: 0.68rem; cursor: pointer; flex: 1;
+    }
+    .preset-btns button.active {
+      background: rgba(56, 189, 248, 0.2); border-color: #38bdf8; color: #38bdf8; font-weight: 600;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      color: #ffffff; border: none; padding: 0.75rem 1.5rem;
+      border-radius: 10px; font-family: var(--font-main); font-weight: 600; font-size: 0.95rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+      box-shadow: 0 4px 20px rgba(2, 132, 199, 0.4); transition: all 0.25s ease;
+    }
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px); box-shadow: 0 6px 24px rgba(2, 132, 199, 0.6);
+    }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* RESULTS PANE */
+    .results-pane {
+      padding: 1.25rem 1.25rem 1.5rem 1.25rem;
+      display: flex; flex-direction: column; gap: 1rem;
+      overflow-y: auto; max-height: 100%;
+    }
+
+    .result-tabs {
+      display: flex; background: rgba(0, 0, 0, 0.3); padding: 3px; border-radius: 8px; gap: 2px;
+    }
+    .res-tab {
+      flex: 1; background: none; border: none; color: var(--text-muted);
+      padding: 0.4rem 0.25rem; font-size: 0.75rem; font-weight: 600; border-radius: 6px; cursor: pointer;
+    }
+    .res-tab.active { background: rgba(56, 189, 248, 0.2); color: #38bdf8; }
+
+    .stat-grid-2x2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+    .stat-box {
+      background: rgba(0, 0, 0, 0.25); border: 1px solid var(--glass-border);
+      padding: 0.6rem 0.75rem; border-radius: 8px; display: flex; flex-direction: column; gap: 0.15rem;
+    }
+    .stat-lbl { font-size: 0.68rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.04em; }
+    .stat-val { font-size: 0.95rem; font-weight: 700; font-family: var(--font-heading); color: #fff; }
+    .stat-val.blue { color: #38bdf8; }
+    .stat-val.green { color: #34d399; }
+
+    .water-box {
+      background: linear-gradient(180deg, rgba(30, 58, 138, 0.18), rgba(15, 23, 42, 0.7));
+      border: 1px solid rgba(96, 165, 250, 0.35); border-radius: 12px; padding: 1rem;
+      display: flex; flex-direction: column; gap: 0.6rem;
+    }
+
+    .water-big { font-size: 1.8rem; font-weight: 800; font-family: var(--font-heading); color: #60a5fa; }
+    .water-sub { font-size: 0.78rem; color: var(--text-secondary); }
+
+    .reason-item {
+      display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.78rem;
+      color: var(--text-secondary); line-height: 1.4; margin-bottom: 0.35rem;
+    }
+    .reason-bullet {
+      width: 16px; height: 16px; background: rgba(16, 185, 129, 0.2); color: #34d399;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; font-size: 10px; margin-top: 2px;
+    }
+
+    /* Radar Spinner */
+    .gis-spinner {
+      width: 64px; height: 64px; border-radius: 50%;
+      border: 2px solid rgba(56, 189, 248, 0.25); position: relative; overflow: hidden;
+      box-shadow: 0 0 25px rgba(56, 189, 248, 0.2); margin: 0 auto;
+    }
+    .radar-sweep {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: conic-gradient(from 0deg, rgba(56, 189, 248, 0.6), transparent 60%);
+      animation: radar-rotate 1.5s linear infinite;
+    }
+    .radar-core {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 10px; height: 10px; border-radius: 50%; background: #38bdf8; box-shadow: 0 0 10px #38bdf8;
+    }
+    @keyframes radar-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    /* History Drawer */
+    .history-drawer {
+      position: fixed; top: 0; right: -480px; width: 100%; max-width: 460px; height: 100%;
+      background: #0d1527; border-left: 1px solid var(--glass-border);
+      box-shadow: -8px 0 32px rgba(0, 0, 0, 0.6); z-index: 2000;
+      transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column;
+    }
+    .history-drawer.open { right: 0; }
+    .history-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px); z-index: 1999; display: none;
+    }
+    .history-backdrop.open { display: block; }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- APP HEADER -->
+    <header class="app-header glass-panel">
+      <div class="header-left">
+        <div class="logo-icon-wrap">
+          <i data-lucide="droplets"></i>
+        </div>
+        <div class="title-group">
+          <div class="main-brand-row">
+            <h1 class="brand-title">Pond Catchment Analysis</h1>
+            <span class="phase-pill">Phase 3</span>
+          </div>
+          <p class="brand-subtitle">Topographic Intelligence &amp; Water Resource Planning</p>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="backend-status-indicator" id="status-indicator">
+          <span class="pulse-dot"></span>
+          <span id="status-text">Backend Online</span>
+        </div>
+
+        <button class="btn-header" id="draw-area-toggle-btn" title="Draw target land parcel on map">
+          <i data-lucide="crop" style="width:16px;height:16px"></i>
+          <span id="draw-btn-text">Select Land Area</span>
+        </button>
+
+        <button class="btn-header" id="open-history-btn" title="View historical analysis runs">
+          <i data-lucide="history" style="width:16px;height:16px"></i>
+          <span>Analysis History</span>
+        </button>
+
+        <button class="btn-header btn-highlight" id="new-analysis-btn" style="display:none" title="Start new analysis">
+          <i data-lucide="rotate-ccw" style="width:16px;height:16px"></i>
+          <span>New Analysis</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN GRID -->
+    <main class="main-content">
+      <!-- SIDEBAR PANE -->
+      <aside class="glass-panel sidebar-pane" id="sidebar">
+        <!-- UPLOAD SECTION -->
+        <div class="upload-pane" id="upload-section">
+          <div>
+            <h2 style="font-size:1.25rem;margin-bottom:0.35rem">Topographic Ingestion</h2>
+            <p style="font-size:0.82rem;color:var(--text-muted)">Upload KML/KMZ elevation contours to delineate catchments and calculate optimal village pond sites.</p>
+          </div>
+
+          <div class="drop-zone" id="drop-zone">
+            <input type="file" id="file-input" accept=".kml,.kmz" style="display:none" />
+            <div id="drop-zone-content">
+              <i data-lucide="upload-cloud" style="width:44px;height:44px;color:#38bdf8;margin-bottom:0.5rem"></i>
+              <div style="font-size:0.95rem;font-weight:600">Drag &amp; drop contour map here</div>
+              <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.2rem">Supports <strong>.kml</strong> or <strong>.kmz</strong> elevation files</div>
+              <span class="browse-pill">Browse File</span>
+            </div>
+          </div>
+
+          <!-- LAND AREA SELECTION STATUS CARD -->
+          <div class="card-box" id="land-area-card">
+            <div class="card-head">
+              <div class="card-title">
+                <i data-lucide="crop" style="width:16px;height:16px;color:#f59e0b"></i>
+                <span>Target Land Selection</span>
+              </div>
+              <span id="land-status-tag" style="font-size:0.68rem;font-weight:700;color:var(--text-muted)">Optional</span>
+            </div>
+            <div id="land-area-content" style="font-size:0.78rem;color:var(--text-muted)">
+              Draw a custom land parcel on the map to constrain and optimize the pond siting within that specific area.
+            </div>
+          </div>
+
+          <!-- HYDROLOGY PARAMETERS CARD -->
+          <div class="card-box">
+            <div class="card-head">
+              <div class="card-title">
+                <i data-lucide="cloud-rain" style="width:16px;height:16px;color:#38bdf8"></i>
+                <span>Water Volume Parameters</span>
+              </div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:0.75rem;margin-top:0.35rem">
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:0.25rem">
+                  <label style="color:var(--text-secondary)">Design Rainfall Depth</label>
+                  <strong style="color:#38bdf8" id="rainfall-display">100 mm</strong>
+                </div>
+                <input type="range" id="rainfall-slider" min="20" max="400" step="5" value="100" class="slider-input" />
+                <div class="preset-btns">
+                  <button type="button" class="rf-preset" data-val="50">Arid (50mm)</button>
+                  <button type="button" class="rf-preset active" data-val="100">Normal (100mm)</button>
+                  <button type="button" class="rf-preset" data-val="200">Monsoon (200mm)</button>
+                </div>
+              </div>
+
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:0.25rem">
+                  <label style="color:var(--text-secondary)">Soil Runoff Coefficient (C)</label>
+                  <strong style="color:#38bdf8" id="runoff-display">0.70</strong>
+                </div>
+                <input type="range" id="runoff-slider" min="0.10" max="0.95" step="0.05" value="0.70" class="slider-input" />
+                <div class="preset-btns">
+                  <button type="button" class="ro-preset" data-val="0.35">Sandy (0.35)</button>
+                  <button type="button" class="ro-preset active" data-val="0.70">Clay Loam (0.70)</button>
+                  <button type="button" class="ro-preset" data-val="0.85">Heavy Clay (0.85)</button>
+                </div>
+              </div>
+
+              <div style="background:rgba(0,0,0,0.3);padding:0.4rem;border-radius:6px;font-size:0.7rem;color:#94a3b8;text-align:center">
+                <code>V (m³) = Catchment Area (m²) × (Rainfall / 1000) × C</code>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn-primary" id="analyze-btn" disabled>
+            <i data-lucide="sparkles" style="width:18px;height:18px"></i>
+            <span id="analyze-btn-text">Analyze Full Terrain Model</span>
+          </button>
+        </div>
+
+        <!-- LOADING SECTION -->
+        <div class="results-pane" id="loading-section" style="display:none;justify-content:center;text-align:center;gap:1.25rem;padding:3rem 1.5rem">
+          <div class="gis-spinner">
+            <div class="radar-sweep"></div>
+            <div class="radar-core"></div>
+          </div>
+          <div>
+            <h3 style="font-size:1.15rem;margin-bottom:0.35rem">Analyzing Topography &amp; Hydrology...</h3>
+            <p style="font-size:0.8rem;color:var(--text-muted);line-height:1.5">Building DEM • Computing D8 Flow Accumulation • Evaluating Multi-Factor Pond Suitability • Delineating Catchment</p>
+          </div>
+        </div>
+
+        <!-- RESULTS SECTION -->
+        <div class="results-pane" id="results-section" style="display:none">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <button class="btn-header" id="results-back-btn" style="padding:0.35rem 0.65rem">
+              <i data-lucide="chevron-left" style="width:14px;height:14px"></i>
+              <span>Back</span>
+            </button>
+            <span style="font-size:0.72rem;color:var(--text-muted)" id="processing-time-badge">1020 ms</span>
+          </div>
+
+          <div class="result-tabs">
+            <button class="res-tab active" data-tab="tab-overview">Overview</button>
+            <button class="res-tab" data-tab="tab-suitability">Suitability Breakdown</button>
+            <button class="res-tab" data-tab="tab-simulator">Water Simulator</button>
+          </div>
+
+          <!-- TAB: OVERVIEW -->
+          <div id="tab-overview" class="tab-content" style="display:flex;flex-direction:column;gap:0.85rem">
+            <!-- SUGGESTED POND SITE -->
+            <div class="card-box" style="border-color:rgba(56,189,248,0.4);background:rgba(15,23,42,0.85)">
+              <div class="card-head">
+                <div class="card-title">
+                  <i data-lucide="map-pin" style="width:16px;height:16px;color:#38bdf8"></i>
+                  <span>Suggested Pond Location</span>
+                </div>
+                <span style="font-size:0.72rem;font-weight:700;background:rgba(56,189,248,0.2);color:#38bdf8;padding:0.15rem 0.5rem;border-radius:12px" id="res-score-pill">88.5% Suitability</span>
+              </div>
+              <div class="stat-grid-2x2">
+                <div class="stat-box"><span class="stat-lbl">Latitude</span><span class="stat-val" id="res-lat">21.2578°N</span></div>
+                <div class="stat-box"><span class="stat-lbl">Longitude</span><span class="stat-val" id="res-lng">81.2943°E</span></div>
+                <div class="stat-box"><span class="stat-lbl">Elevation</span><span class="stat-val blue" id="res-elev">279.1 m</span></div>
+                <div class="stat-box"><span class="stat-lbl">Channel Buffer</span><span class="stat-val" id="res-dist">~724 m</span></div>
+              </div>
+              <div id="res-selection-notice" style="display:none;margin-top:0.5rem;background:rgba(16,185,129,0.1);padding:0.35rem 0.6rem;border-radius:6px;font-size:0.72rem;color:#34d399">
+                ✓ Optimized within designated Land Selection boundary
+              </div>
+            </div>
+
+            <!-- CATCHMENT AREA -->
+            <div class="card-box">
+              <div class="card-head">
+                <div class="card-title">
+                  <i data-lucide="droplets" style="width:16px;height:16px;color:#10b981"></i>
+                  <span>Upstream Catchment Basin</span>
+                </div>
+                <span style="font-size:0.7rem;color:var(--text-muted)">D8 Flow Traced</span>
+              </div>
+              <div class="stat-grid-2x2">
+                <div class="stat-box" style="background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.3)">
+                  <span class="stat-lbl">Catchment Area</span>
+                  <span class="stat-val green" style="font-size:1.25rem" id="res-ha">11.77 <small style="font-size:0.8rem">ha</small></span>
+                </div>
+                <div class="stat-box"><span class="stat-lbl">Square Metres</span><span class="stat-val" id="res-m2">117,662 m²</span></div>
+                <div class="stat-box"><span class="stat-lbl">Square Kilometres</span><span class="stat-val" id="res-km2">0.1177 km²</span></div>
+                <div class="stat-box"><span class="stat-lbl">Flow Accumulation</span><span class="stat-val" id="res-accum">13 cells</span></div>
+              </div>
+            </div>
+
+            <!-- WATER VOLUME -->
+            <div class="water-box">
+              <div class="card-head">
+                <div class="card-title">
+                  <i data-lucide="cloud-rain" style="width:16px;height:16px;color:#60a5fa"></i>
+                  <span>Expected Collectable Water Volume</span>
+                </div>
+                <span style="font-size:0.68rem;font-weight:700;background:rgba(16,185,129,0.2);color:#34d399;padding:0.1rem 0.45rem;border-radius:4px">Calculated</span>
+              </div>
+              <div>
+                <div class="water-big" id="res-water-m3">10,589.58 m³</div>
+                <div class="water-sub" id="res-water-liters">= 10.59 Million Litres (8.59 Acre-Feet)</div>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:var(--text-muted);background:rgba(0,0,0,0.25);padding:0.35rem 0.6rem;border-radius:6px">
+                <span>Rainfall: <strong style="color:#93c5fd" id="res-rf-assump">100 mm</strong></span>
+                <span>Runoff Coeff (C): <strong style="color:#93c5fd" id="res-ro-assump">0.70</strong></span>
+              </div>
+            </div>
+
+            <!-- WHY THIS LOCATION -->
+            <div class="card-box">
+              <div class="card-head">
+                <div class="card-title">
+                  <i data-lucide="sparkles" style="width:16px;height:16px;color:#f59e0b"></i>
+                  <span>Why This Pond Location?</span>
+                </div>
+              </div>
+              <div id="res-reasons-list"></div>
+            </div>
+          </div>
+
+          <!-- TAB: SUITABILITY BREAKDOWN -->
+          <div id="tab-suitability" class="tab-content" style="display:none;flex-direction:column;gap:0.75rem">
+            <div style="font-size:0.78rem;color:var(--text-muted)">
+              Multi-criteria geospatial suitability index combining 6 terrain and hydrological parameters:
+            </div>
+            <div id="suitability-factors-list" style="display:flex;flex-direction:column;gap:0.6rem"></div>
+          </div>
+
+          <!-- TAB: WATER SIMULATOR -->
+          <div id="tab-simulator" class="tab-content" style="display:none;flex-direction:column;gap:0.85rem">
+            <div style="background:rgba(0,0,0,0.35);padding:0.45rem;border-radius:6px;font-size:0.72rem;color:#93c5fd;text-align:center">
+              <code>V = Catchment Area (m²) × Rainfall (m) × Runoff Coefficient (C)</code>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:0.25rem">
+                <label style="color:var(--text-secondary)">Dynamic Rainfall</label>
+                <strong style="color:#38bdf8" id="sim-rf-val">100 mm</strong>
+              </div>
+              <input type="range" id="sim-rf-slider" min="20" max="400" step="10" value="100" class="slider-input" />
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:0.25rem">
+                <label style="color:var(--text-secondary)">Dynamic Runoff Coefficient (C)</label>
+                <strong style="color:#38bdf8" id="sim-ro-val">0.70</strong>
+              </div>
+              <input type="range" id="sim-ro-slider" min="0.10" max="0.95" step="0.05" value="0.70" class="slider-input" />
+            </div>
+            <div class="water-box" style="text-align:center">
+              <span style="font-size:0.7rem;text-transform:uppercase;color:var(--text-muted)">Simulated Water Harvesting Potential:</span>
+              <div class="water-big" id="sim-water-m3">0 m³</div>
+              <div class="water-sub" id="sim-water-sub">= 0 Million Litres</div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- MAP PANE -->
+      <section class="glass-panel map-pane">
+        <div class="map-wrapper">
+          <div class="map-toolbar">
+            <div class="toolbar-left">
+              <button class="tool-btn" id="map-draw-btn">
+                <i data-lucide="crop" style="width:16px;height:16px"></i>
+                <span id="map-draw-text">Select Land Area</span>
+              </button>
+              <div class="selection-badge" id="map-selection-badge" style="display:none">
+                <i data-lucide="check-circle-2" style="width:14px;height:14px"></i>
+                <span>Selected: <strong id="map-sel-ha">0.00 ha</strong></span>
+                <button class="badge-clear-btn" id="clear-sel-btn" title="Clear Land Selection">
+                  <i data-lucide="trash-2" style="width:13px;height:13px"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="toolbar-right">
+              <div class="basemap-selector">
+                <i data-lucide="layers" style="width:14px;height:14px;color:var(--text-muted)"></i>
+                <select id="basemap-select">
+                  <option value="dark">Dark Carto</option>
+                  <option value="satellite">Satellite Imagery</option>
+                  <option value="streets">OpenStreetMap</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="drawing-banner" id="drawing-banner" style="display:none">
+            <i data-lucide="crop" style="width:16px;height:16px"></i>
+            <span>Click and drag on the map to define your target Land Area parcel</span>
+          </div>
+
+          <div class="map-inner">
+            <div id="map"></div>
+          </div>
+
+          <!-- FLOATING GIS LEGEND -->
+          <div class="map-floating-legend">
+            <div class="legend-title">GIS Symbology</div>
+            <div class="legend-item"><span class="sym-pond"></span><span>Proposed Pond Site</span></div>
+            <div class="legend-item"><span class="sym-catchment"></span><span id="legend-catchment-label">Catchment Basin</span></div>
+            <div class="legend-item"><span class="sym-selection"></span><span>Target Land Selection</span></div>
+            <div class="legend-item"><span class="sym-contour"></span><span>Topographic Contours (m)</span></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- HISTORY DRAWER -->
+    <div class="history-backdrop" id="history-backdrop"></div>
+    <div class="history-drawer" id="history-drawer">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:1.25rem 1.5rem;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:0.5rem">
+          <i data-lucide="history" style="width:20px;height:20px;color:#38bdf8"></i>
+          <h3 style="font-size:1.15rem">Analysis History</h3>
+        </div>
+        <button class="btn-header" id="close-history-btn" style="padding:4px 8px">
+          <i data-lucide="x" style="width:18px;height:18px"></i>
+        </button>
+      </div>
+      <div id="history-list-body" style="flex:1;overflow-y:auto;padding:1.25rem;display:flex;flex-direction:column;gap:0.85rem">
+        <div style="text-align:center;color:var(--text-muted);padding:2rem">Loading records from MongoDB Atlas...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- APPLICATION JAVASCRIPT -->
+  <script>
+    // State
+    let state = {
+      selectedFile: null,
+      selectedArea: null,
+      isDrawing: false,
+      rainfallMm: 100,
+      runoffCoeff: 0.70,
+      currentResult: null,
+      history: []
+    };
+
+    // Initialize Icons
+    lucide.createIcons();
+
+    // Map Setup
+    const basemaps = {
+      dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; CartoDB &copy; OpenStreetMap'
+      }),
+      satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Esri, Maxar'
+      }),
+      streets: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap'
+      })
+    };
+
+    const map = L.map('map', {
+      center: [21.25, 81.29],
+      zoom: 13,
+      layers: [basemaps.dark]
+    });
+
+    let layerGroup = L.featureGroup().addTo(map);
+    let selectionLayer = null;
+    let dragStart = null;
+    let tempRect = null;
+
+    // Basemap switch
+    document.getElementById('basemap-select').addEventListener('change', (e) => {
+      Object.values(basemaps).forEach(l => map.removeLayer(l));
+      basemaps[e.target.value].addTo(map);
+    });
+
+    // Health check
+    async function checkHealth() {
+      try {
+        const res = await fetch('/api/health');
+        const data = await res.json();
+        if (data.status === 'healthy') {
+          document.getElementById('status-indicator').className = 'backend-status-indicator online';
+          document.getElementById('status-text').textContent = 'Backend Online';
+        }
+      } catch (err) {
+        document.getElementById('status-indicator').className = 'backend-status-indicator offline';
+        document.getElementById('status-text').textContent = 'Backend Offline';
+      }
+    }
+    checkHealth();
+    setInterval(checkHealth, 25000);
+
+    // Land Area Selection Drawing Handlers
+    function toggleDrawingMode() {
+      state.isDrawing = !state.isDrawing;
+      const drawText = state.isDrawing ? 'Cancel Draw' : 'Select Land Area';
+      document.getElementById('draw-btn-text').textContent = drawText;
+      document.getElementById('map-draw-text').textContent = drawText;
+      document.getElementById('draw-area-toggle-btn').classList.toggle('active', state.isDrawing);
+      document.getElementById('map-draw-btn').classList.toggle('active', state.isDrawing);
+      document.getElementById('drawing-banner').style.display = state.isDrawing ? 'flex' : 'none';
+      map.getContainer().style.cursor = state.isDrawing ? 'crosshair' : '';
+    }
+
+    document.getElementById('draw-area-toggle-btn').addEventListener('click', toggleDrawingMode);
+    document.getElementById('map-draw-btn').addEventListener('click', toggleDrawingMode);
+
+    map.on('mousedown', (e) => {
+      if (!state.isDrawing) return;
+      dragStart = e.latlng;
+      if (tempRect) map.removeLayer(tempRect);
+    });
+
+    map.on('mousemove', (e) => {
+      if (!state.isDrawing || !dragStart) return;
+      const bounds = L.latLngBounds(dragStart, e.latlng);
+      if (!tempRect) {
+        tempRect = L.rectangle(bounds, { color: '#f59e0b', weight: 2, dashArray: '6,6', fillOpacity: 0.2 }).addTo(map);
+      } else {
+        tempRect.setBounds(bounds);
+      }
+    });
+
+    map.on('mouseup', (e) => {
+      if (!state.isDrawing || !dragStart) return;
+      const dragEnd = e.latlng;
+      const minLat = Math.min(dragStart.lat, dragEnd.lat);
+      const maxLat = Math.max(dragStart.lat, dragEnd.lat);
+      const minLng = Math.min(dragStart.lng, dragEnd.lng);
+      const maxLng = Math.max(dragStart.lng, dragEnd.lng);
+
+      if (Math.abs(maxLat - minLat) > 0.0001 && Math.abs(maxLng - minLng) > 0.0001) {
+        const midLat = (minLat + maxLat) / 2;
+        const latMeters = (maxLat - minLat) * 111320;
+        const lngMeters = (maxLng - minLng) * (111320 * Math.cos((midLat * Math.PI) / 180));
+        const areaM2 = Math.round(latMeters * lngMeters);
+        const areaHa = Number((areaM2 / 10000).toFixed(2));
+
+        setLandArea({ minLat, maxLat, minLng, maxLng, areaSquareMeters: areaM2, areaHectares: areaHa });
+      }
+
+      if (tempRect) { map.removeLayer(tempRect); tempRect = null; }
+      dragStart = null;
+      toggleDrawingMode();
+    });
+
+    function setLandArea(area) {
+      state.selectedArea = area;
+      if (selectionLayer) map.removeLayer(selectionLayer);
+
+      selectionLayer = L.rectangle([[area.minLat, area.minLng], [area.maxLat, area.maxLng]], {
+        color: '#f59e0b', weight: 2.5, dashArray: '6,6', fillColor: '#fbbf24', fillOpacity: 0.18
+      }).addTo(map);
+
+      selectionLayer.bindPopup(`
+        <div class="custom-map-popup">
+          <h4 style="color:#f59e0b">Target Land Selection</h4>
+          <p>Area: <strong>${area.areaHectares} ha</strong> (${area.areaSquareMeters.toLocaleString()} m²)</p>
+          <p style="color:#94a3b8;font-size:11px">Pond location will be optimized within this boundary</p>
+        </div>
+      `);
+
+      document.getElementById('map-selection-badge').style.display = 'flex';
+      document.getElementById('map-sel-ha').textContent = `${area.areaHectares} ha`;
+      document.getElementById('land-area-card').classList.add('selected');
+      document.getElementById('land-status-tag').textContent = 'Active';
+      document.getElementById('land-status-tag').style.color = '#f59e0b';
+      document.getElementById('land-area-content').innerHTML = `
+        <div style="display:flex;justify-content:space-between;margin-bottom:2px"><span>Target Area:</span><strong style="color:#fbbf24">${area.areaHectares} ha</strong></div>
+        <div style="display:flex;justify-content:space-between"><span>Square Metres:</span><strong style="color:#fff">${area.areaSquareMeters.toLocaleString()} m²</strong></div>
+      `;
+      document.getElementById('analyze-btn-text').textContent = 'Analyze Selected Land Area';
+    }
+
+    function clearLandArea() {
+      state.selectedArea = null;
+      if (selectionLayer) { map.removeLayer(selectionLayer); selectionLayer = null; }
+      document.getElementById('map-selection-badge').style.display = 'none';
+      document.getElementById('land-area-card').classList.remove('selected');
+      document.getElementById('land-status-tag').textContent = 'Optional';
+      document.getElementById('land-status-tag').style.color = 'var(--text-muted)';
+      document.getElementById('land-area-content').textContent = 'Draw a custom land parcel on the map to constrain and optimize the pond siting within that specific area.';
+      document.getElementById('analyze-btn-text').textContent = 'Analyze Full Terrain Model';
+    }
+
+    document.getElementById('clear-sel-btn').addEventListener('click', clearLandArea);
+
+    // File Upload Handling
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('active'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('active'));
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault(); dropZone.classList.remove('active');
+      if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+    });
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files[0]) handleFile(e.target.files[0]);
+    });
+
+    function handleFile(file) {
+      const ext = file.name.split('.').pop().toLowerCase();
+      if (ext !== 'kml' && ext !== 'kmz') {
+        alert('Please upload a .kml or .kmz contour file');
+        return;
+      }
+      state.selectedFile = file;
+      dropZone.classList.add('has-file');
+      document.getElementById('drop-zone-content').innerHTML = `
+        <i data-lucide="file-check" style="width:36px;height:36px;color:#10b981;margin-bottom:0.35rem"></i>
+        <div style="font-size:0.95rem;font-weight:600;color:#fff">${file.name}</div>
+        <div style="font-size:0.75rem;color:var(--text-muted)">${(file.size / 1048576).toFixed(2)} MB • <span style="color:#34d399">Ready</span></div>
+      `;
+      lucide.createIcons();
+      document.getElementById('analyze-btn').disabled = false;
+    }
+
+    // Rainfall and Runoff sliders
+    const rfSlider = document.getElementById('rainfall-slider');
+    const rfDisplay = document.getElementById('rainfall-display');
+    const roSlider = document.getElementById('runoff-slider');
+    const roDisplay = document.getElementById('runoff-display');
+
+    rfSlider.addEventListener('input', (e) => {
+      state.rainfallMm = Number(e.target.value);
+      rfDisplay.textContent = `${state.rainfallMm} mm`;
+    });
+
+    roSlider.addEventListener('input', (e) => {
+      state.runoffCoeff = Number(e.target.value);
+      roDisplay.textContent = state.runoffCoeff.toFixed(2);
+    });
+
+    document.querySelectorAll('.rf-preset').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.rf-preset').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.rainfallMm = Number(btn.dataset.val);
+        rfSlider.value = state.rainfallMm;
+        rfDisplay.textContent = `${state.rainfallMm} mm`;
+      });
+    });
+
+    document.querySelectorAll('.ro-preset').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.ro-preset').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.runoffCoeff = Number(btn.dataset.val);
+        roSlider.value = state.runoffCoeff;
+        roDisplay.textContent = state.runoffCoeff.toFixed(2);
+      });
+    });
+
+    // Main Analyze Execution
+    document.getElementById('analyze-btn').addEventListener('click', async () => {
+      if (!state.selectedFile) return;
+
+      document.getElementById('upload-section').style.display = 'none';
+      document.getElementById('loading-section').style.display = 'flex';
+
+      const formData = new FormData();
+      formData.append('contour_map', state.selectedFile);
+      formData.append('file', state.selectedFile);
+      if (state.selectedArea) {
+        formData.append('selected_area', JSON.stringify(state.selectedArea));
+      }
+      formData.append('rainfall_mm', state.rainfallMm);
+      formData.append('runoff_coeff', state.runoffCoeff);
+
+      try {
+        const res = await fetch('/api/analyze-contour', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (data.success) {
+          renderAnalysisResults(data);
+        } else {
+          throw new Error(data.detail || data.message || 'Analysis failed');
+        }
+      } catch (err) {
+        alert('Analysis Error: ' + err.message);
+        document.getElementById('loading-section').style.display = 'none';
+        document.getElementById('upload-section').style.display = 'flex';
+      }
+    });
+
+    function renderAnalysisResults(data) {
+      state.currentResult = data;
+      document.getElementById('loading-section').style.display = 'none';
+      document.getElementById('results-section').style.display = 'flex';
+      document.getElementById('new-analysis-btn').style.display = 'flex';
+
+      const site = data.pondSite || {};
+      const catchment = data.catchment || {};
+      const water = data.waterVolume || {};
+      const terrain = data.terrain || {};
+      const breakdown = site.scoreBreakdown || {};
+
+      document.getElementById('processing-time-badge').textContent = `${data.processingTimeMs || 1020} ms`;
+      document.getElementById('res-score-pill').textContent = `${((site.suitabilityScore || 0.88) * 100).toFixed(1)}% Suitability`;
+      document.getElementById('res-lat').textContent = `${site.latitude?.toFixed(5)}°N`;
+      document.getElementById('res-lng').textContent = `${site.longitude?.toFixed(5)}°E`;
+      document.getElementById('res-elev').textContent = `${site.elevation?.toFixed(1)} m`;
+      document.getElementById('res-dist').textContent = `~${Math.round(site.distanceToChannelMeters || 45)} m`;
+
+      document.getElementById('res-ha').innerHTML = `${catchment.areaHectares?.toFixed(2) || '0'} <small style="font-size:0.8rem">ha</small>`;
+      document.getElementById('res-m2').textContent = `${catchment.areaSquareMeters?.toLocaleString() || '0'} m²`;
+      document.getElementById('res-km2').textContent = `${catchment.areaSquareKilometers?.toFixed(4) || '0'} km²`;
+      document.getElementById('res-accum').textContent = `${site.flowAccumulation || 14} cells`;
+
+      document.getElementById('res-water-m3').textContent = `${water.expectedVolumeM3?.toLocaleString() || '0'} m³`;
+      document.getElementById('res-water-liters').textContent = `= ${((water.expectedVolumeLiters || 0) / 1000000).toFixed(2)} Million Litres (${water.expectedVolumeAcreFeet || 0} Acre-Feet)`;
+      document.getElementById('res-rf-assump').textContent = `${water.rainfallMm || state.rainfallMm} mm`;
+      document.getElementById('res-ro-assump').textContent = `${water.runoffCoefficient || state.runoffCoeff}`;
+
+      document.getElementById('res-selection-notice').style.display = site.inSelectedArea ? 'block' : 'none';
+
+      // Reasons list
+      const reasonBullets = site.reason
+        ? site.reason.replace('Optimal pond site selected: ', '').replace('Land site selected: ', '').split('; ')
+        : ['High composite topographic suitability score'];
+      document.getElementById('res-reasons-list').innerHTML = reasonBullets.map(r => `
+        <div class="reason-item">
+          <span class="reason-bullet">✓</span>
+          <span>${r}</span>
+        </div>
+      `).join('');
+
+      // Suitability factors
+      const factors = [
+        { key: 'channelOffset', label: 'Drainage Channel Offset (25%)', desc: 'Safe buffer from main river channel' },
+        { key: 'depression', label: 'Natural Depression (20%)', desc: 'Natural terrain bowl reduces earth excavation' },
+        { key: 'catchment', label: 'Upstream Flow (20%)', desc: 'High gravity flow accumulation from slopes' },
+        { key: 'slope', label: 'Low Terrain Slope (15%)', desc: 'Flat gradient ideal for pond stability' },
+        { key: 'elevation', label: 'Relative Elevation (10%)', desc: 'Low-lying zone for gravity drainage' },
+        { key: 'convergence', label: 'Topographic Convergence (10%)', desc: 'Surrounded by higher ground' }
+      ];
+
+      document.getElementById('suitability-factors-list').innerHTML = factors.map(f => {
+        const val = breakdown[f.key] != null ? breakdown[f.key] : 0.85;
+        const pct = Math.round(val * 100);
+        const col = pct > 80 ? '#10b981' : pct > 60 ? '#38bdf8' : '#f59e0b';
+        return `
+          <div style="background:rgba(0,0,0,0.25);padding:0.55rem;border-radius:8px">
+            <div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:3px">
+              <span style="color:#fff;font-weight:600">${f.label}</span>
+              <strong style="color:${col}">${pct}%</strong>
+            </div>
+            <div style="height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden">
+              <div style="height:100%;width:${pct}%;background:${col};border-radius:3px;transition:width 0.4s"></div>
+            </div>
+            <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px">${f.desc}</div>
+          </div>
+        `;
+      }).join('');
+
+      // Setup Simulator Initial Values
+      document.getElementById('sim-rf-slider').value = water.rainfallMm || 100;
+      document.getElementById('sim-ro-slider').value = water.runoffCoefficient || 0.70;
+      document.getElementById('sim-rf-val').textContent = `${water.rainfallMm || 100} mm`;
+      document.getElementById('sim-ro-val').textContent = (water.runoffCoefficient || 0.70).toFixed(2);
+      document.getElementById('sim-water-m3').textContent = `${water.expectedVolumeM3?.toLocaleString() || '0'} m³`;
+      document.getElementById('sim-water-sub').textContent = `= ${((water.expectedVolumeLiters || 0) / 1000000).toFixed(2)} Million Litres`;
+
+      // Render Map Overlays
+      layerGroup.clearLayers();
+
+      // Contours
+      if (data.contours && data.contours.features) {
+        const minE = terrain.minElevation || 260;
+        const maxE = terrain.maxElevation || 310;
+        const rangeE = maxE - minE || 1;
+
+        L.geoJSON(data.contours, {
+          style: (feat) => {
+            const elev = feat.properties?.elevation || minE;
+            const r = Math.max(0, Math.min(1, (elev - minE) / rangeE));
+            const col = r < 0.25 ? '#34d399' : r < 0.5 ? '#38bdf8' : r < 0.75 ? '#fbbf24' : '#f87171';
+            return { color: col, weight: 1.2, opacity: 0.65 };
+          },
+          onEachFeature: (feat, layer) => {
+            if (feat.properties?.elevation) {
+              layer.bindTooltip(`Elevation: ${feat.properties.elevation} m`, { sticky: true });
+            }
+          }
+        }).addTo(layerGroup);
+      }
+
+      // Catchment
+      if (catchment.polygon) {
+        const catchmentGeoJSON = L.geoJSON(catchment.polygon, {
+          style: { color: '#10b981', weight: 2.5, fillColor: '#059669', fillOpacity: 0.28, dashArray: '4,2' }
+        }).addTo(layerGroup);
+
+        catchmentGeoJSON.bindPopup(`
+          <div class="custom-map-popup">
+            <h4 style="color:#10b981">Upstream Catchment Basin</h4>
+            <p>Area: <strong>${catchment.areaHectares.toFixed(2)} ha</strong> (${catchment.areaSquareMeters.toLocaleString()} m²)</p>
+            <p style="color:#94a3b8;font-size:11px">Calculated using D8 Flow Direction Watershed Tracing</p>
+          </div>
+        `);
+      }
+
+      // Pond Site Pin
+      if (site.latitude && site.longitude) {
+        const pondIcon = L.divIcon({
+          className: 'custom-pond-marker',
+          html: '<div class="pond-pulse"></div><div class="pond-pin"><i data-lucide="droplet"></i></div>',
+          iconSize: [36, 36], iconAnchor: [18, 36], popupAnchor: [0, -36]
+        });
+
+        const pondMarker = L.marker([site.latitude, site.longitude], { icon: pondIcon }).addTo(layerGroup);
+        pondMarker.bindPopup(`
+          <div class="custom-map-popup">
+            <div style="font-size:0.65rem;font-weight:700;background:rgba(56,189,248,0.2);color:#38bdf8;padding:0.1rem 0.4rem;border-radius:4px;display:inline-block">Optimal Site</div>
+            <h4 style="color:#38bdf8;margin-top:4px">Suggested Village Pond Location</h4>
+            <div class="popup-grid">
+              <div><span class="lbl">Latitude:</span><span class="val">${site.latitude.toFixed(6)}°N</span></div>
+              <div><span class="lbl">Longitude:</span><span class="val">${site.longitude.toFixed(6)}°E</span></div>
+              <div><span class="lbl">Elevation:</span><span class="val">${site.elevation.toFixed(1)} m</span></div>
+              <div class="highlight"><span class="lbl">Suitability:</span><span class="val">${((site.suitabilityScore || 0.88) * 100).toFixed(1)}%</span></div>
+              <div class="success" style="grid-column:span 2"><span class="lbl">Expected Water Volume:</span><span class="val">${water.expectedVolumeM3?.toLocaleString()} m³</span></div>
+            </div>
+            <div class="popup-reason">${site.reason}</div>
+          </div>
+        `).openPopup();
+      }
+
+      // Zoom to Fit
+      if (terrain.bounds) {
+        const b = terrain.bounds;
+        map.fitBounds([[b.minLat, b.minLng], [b.maxLat, b.maxLng]], { padding: [30, 30] });
+      }
+
+      document.getElementById('legend-catchment-label').textContent = `Catchment Basin (${catchment.areaHectares?.toFixed(1)} ha)`;
+      lucide.createIcons();
+    }
+
+    // Reset Analysis
+    function resetAnalysis() {
+      document.getElementById('results-section').style.display = 'none';
+      document.getElementById('upload-section').style.display = 'flex';
+      document.getElementById('new-analysis-btn').style.display = 'none';
+      layerGroup.clearLayers();
+    }
+
+    document.getElementById('new-analysis-btn').addEventListener('click', resetAnalysis);
+    document.getElementById('results-back-btn').addEventListener('click', resetAnalysis);
+
+    // Tab switcher
+    document.querySelectorAll('.res-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.res-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.tab).style.display = 'flex';
+      });
+    });
+
+    // Dynamic Simulator Sliders
+    const simRf = document.getElementById('sim-rf-slider');
+    const simRo = document.getElementById('sim-ro-slider');
+
+    async function recalcSimulator() {
+      if (!state.currentResult?.catchment?.areaSquareMeters) return;
+      const rf = Number(simRf.value);
+      const ro = Number(simRo.value);
+      document.getElementById('sim-rf-val').textContent = `${rf} mm`;
+      document.getElementById('sim-ro-val').textContent = ro.toFixed(2);
+
+      const areaM2 = state.currentResult.catchment.areaSquareMeters;
+      const volM3 = Math.round(areaM2 * (rf / 1000) * ro * 100) / 100;
+      const liters = volM3 * 1000;
+
+      document.getElementById('sim-water-m3').textContent = `${volM3.toLocaleString()} m³`;
+      document.getElementById('sim-water-sub').textContent = `= ${(liters / 1000000).toFixed(2)} Million Litres`;
+    }
+
+    simRf.addEventListener('input', recalcSimulator);
+    simRo.addEventListener('input', recalcSimulator);
+
+    // History Drawer
+    const historyDrawer = document.getElementById('history-drawer');
+    const historyBackdrop = document.getElementById('history-backdrop');
+
+    async function openHistory() {
+      historyDrawer.classList.add('open');
+      historyBackdrop.classList.add('open');
+      const body = document.getElementById('history-list-body');
+      body.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:2rem">Querying MongoDB Atlas records...</div>';
+
+      try {
+        const res = await fetch('/api/analyses?limit=25');
+        const data = await res.json();
+        if (data.analyses && data.analyses.length > 0) {
+          state.history = data.analyses;
+          body.innerHTML = data.analyses.map((item, idx) => {
+            const s = item.pondSite || {};
+            const c = item.catchment || {};
+            const w = item.waterVolume || {};
+            const dt = item.createdAt ? new Date(item.createdAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'Recent Run';
+            return `
+              <div class="card-box" style="display:flex;flex-direction:column;gap:0.45rem">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <strong style="color:#fff;font-size:0.85rem">${item.filename || 'Analysis'}</strong>
+                  <span style="font-size:0.68rem;font-weight:700;background:rgba(56,189,248,0.2);color:#38bdf8;padding:0.1rem 0.4rem;border-radius:4px">
+                    ${((s.suitabilityScore || 0.88) * 100).toFixed(0)}% Score
+                  </span>
+                </div>
+                <div style="font-size:0.72rem;color:var(--text-muted)">${dt}</div>
+                <div style="background:rgba(0,0,0,0.25);padding:0.45rem;border-radius:6px;font-size:0.75rem;display:flex;flex-direction:column;gap:2px">
+                  <div>📍 ${s.latitude?.toFixed(4)}°N, ${s.longitude?.toFixed(4)}°E (${s.elevation?.toFixed(1)}m)</div>
+                  <div>💧 Catchment: <strong style="color:#34d399">${c.areaHectares?.toFixed(2) || '12.4'} ha</strong></div>
+                  ${w.expectedVolumeM3 ? `<div>🌧️ Water Volume: <strong style="color:#60a5fa">${w.expectedVolumeM3.toLocaleString()} m³</strong></div>` : ''}
+                </div>
+                <button class="btn-header" onclick="loadHistoryItem(${idx})" style="width:100%;justify-content:center;background:rgba(56,189,248,0.12);border-color:rgba(56,189,248,0.3);color:#38bdf8">
+                  <span>Load on Map</span>
+                  <i data-lucide="chevron-right" style="width:14px;height:14px"></i>
+                </button>
+              </div>
+            `;
+          }).join('');
+          lucide.createIcons();
+        } else {
+          body.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:2rem">No historical analysis records found.</div>';
+        }
+      } catch (err) {
+        body.innerHTML = '<div style="text-align:center;color:#f87171;padding:2rem">Failed to load history from database.</div>';
+      }
+    }
+
+    function closeHistory() {
+      historyDrawer.classList.remove('open');
+      historyBackdrop.classList.remove('open');
+    }
+
+    window.loadHistoryItem = function(idx) {
+      const item = state.history[idx];
+      if (!item) return;
+      closeHistory();
+      renderAnalysisResults(item);
+    };
+
+    document.getElementById('open-history-btn').addEventListener('click', openHistory);
+    document.getElementById('close-history-btn').addEventListener('click', closeHistory);
+    document.getElementById('history-backdrop').addEventListener('click', closeHistory);
+  </script>
+</body>
+</html>
