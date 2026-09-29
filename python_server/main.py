@@ -101,15 +101,21 @@ async def parse_contours(
             "features": sampled_contours
         }
 
+        bounds_meta = metadata.get("bounds", {})
+        min_lat = bounds_meta.get("minLat", metadata.get("minLat", 21.2))
+        max_lat = bounds_meta.get("maxLat", metadata.get("maxLat", 21.3))
+        min_lng = bounds_meta.get("minLng", metadata.get("minLng", 81.2))
+        max_lng = bounds_meta.get("maxLng", metadata.get("maxLng", 81.3))
+
         return {
             "success": True,
             "filename": upload.filename,
             "metadata": metadata,
             "bounds": {
-                "minLat": metadata.get("minLat", 21.2),
-                "maxLat": metadata.get("maxLat", 21.3),
-                "minLng": metadata.get("minLng", 81.2),
-                "maxLng": metadata.get("maxLng", 81.3)
+                "minLat": min_lat,
+                "maxLat": max_lat,
+                "minLng": min_lng,
+                "maxLng": max_lng
             },
             "contours": contour_geojson
         }

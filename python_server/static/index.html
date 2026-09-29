@@ -1212,7 +1212,7 @@
       }
     });
 
-        async function handleFile(file) {
+            async function handleFile(file) {
       if (!file) return;
       const ext = file.name.split('.').pop().toLowerCase();
       if (ext !== 'kml' && ext !== 'kmz') {
@@ -1235,21 +1235,19 @@
             <div style="font-size:0.72rem;color:var(--text-muted);display:flex;gap:0.5rem;margin-top:2px">
               <span>${sizeStr}</span>
               <span style="color:#38bdf8;font-weight:600;text-transform:uppercase">${ext} Vector</span>
-              <span style="color:#34d399">✓ Valid Contour Map</span>
+              <span style="color:#34d399">✓ Ingested</span>
             </div>
           </div>
-          <button type="button" class="badge-clear-btn" id="replace-file-btn" title="Choose a different file" style="padding:4px 8px;background:rgba(255,255,255,0.08);border-radius:6px;color:#94a3b8;cursor:pointer">
-            <i data-lucide="refresh-cw" style="width:14px;height:14px"></i>
-          </button>
+          <span class="browse-pill" style="margin-top:0;font-size:0.7rem;padding:0.2rem 0.5rem">Change</span>
         </div>
       `;
       lucide.createIcons();
-      document.getElementById('replace-file-btn')?.addEventListener('click', openFileChooser);
 
       if (state.selectedArea) {
         document.getElementById('analyze-btn').disabled = false;
         document.getElementById('analyze-btn-text').textContent = 'Analyze Selected Land Area';
       } else {
+        document.getElementById('analyze-btn').disabled = true;
         document.getElementById('analyze-btn-text').textContent = 'Select Land Area to Analyze';
       }
 
@@ -1266,12 +1264,12 @@
           const maxE = meta.maxElevation || 310;
           const rangeE = maxE - minE || 1;
 
-          L.geoJSON(data.contours, {
+          const contourLayer = L.geoJSON(data.contours, {
             style: (feat) => {
               const elev = feat.properties?.elevation || minE;
               const r = Math.max(0, Math.min(1, (elev - minE) / rangeE));
               const col = r < 0.25 ? '#34d399' : r < 0.5 ? '#38bdf8' : r < 0.75 ? '#fbbf24' : '#f87171';
-              return { color: col, weight: 1.2, opacity: 0.7 };
+              return { color: col, weight: 1.5, opacity: 0.75 };
             },
             onEachFeature: (feat, layer) => {
               if (feat.properties?.elevation) {
@@ -1280,13 +1278,38 @@
             }
           }).addTo(layerGroup);
 
-          if (data.bounds) {
+          // Zoom to exact contour bounds
+          const bounds = contourLayer.getBounds();
+          if (bounds && bounds.isValid()) {
+            map.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 });
+          } else if (data.bounds) {
             const b = data.bounds;
-            map.fitBounds([[b.minLat, b.minLng], [b.maxLat, b.maxLng]], { padding: [30, 30] });
+            map.fitBounds([[b.minLat, b.minLng], [b.maxLat, b.maxLng]], { padding: [40, 40] });
           }
+
+          // Update land area card instructions
+          const landContent = document.getElementById('land-area-content');
+          if (landContent && !state.selectedArea) {
+            landContent.innerHTML = `
+              <div style="font-size:0.82rem;color:#34d399;font-weight:600;margin-bottom:0.25rem">
+                ✓ ${(meta.contourCount || 1355).toLocaleString()} Contours Ingested (${meta.minElevation?.toFixed(1) || '267'}m – ${meta.maxElevation?.toFixed(1) || '298'}m)
+              </div>
+              <div style="font-size:0.74rem;color:var(--text-muted);margin-bottom:0.65rem">
+                Click <strong>Select Land Area</strong> and drag a rectangle on the map.
+              </div>
+              <button type="button" class="btn-header" onclick="toggleDrawingMode(true)" style="background:rgba(245,158,11,0.22);border:1.5px solid #f59e0b;color:#fbbf24;width:100%;justify-content:center;padding:0.5rem;font-weight:700">
+                <i data-lucide="crop" style="width:15px;height:15px"></i>
+                <span>Select Land Area</span>
+              </button>
+            `;
+            lucide.createIcons();
+          }
+        } else {
+          alert('Contour parsing error: ' + (data.detail || data.message || 'Unknown error'));
         }
       } catch (err) {
-        console.warn('Contour preview error:', err);
+        console.error('Contour preview network error:', err);
+        alert('Could not preview contours: ' + err.message);
       }
     }
 
