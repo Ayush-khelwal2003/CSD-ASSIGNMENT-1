@@ -38,6 +38,32 @@ class VolumeRecalcRequest(BaseModel):
     runoffCoefficient: float = 0.70
 
 
+
+HISTORY_FILE = os.path.join(os.path.dirname(__file__), "analyses_store.json")
+
+def save_analysis_local(data: dict):
+    try:
+        records = []
+        if os.path.exists(HISTORY_FILE):
+            with open(HISTORY_FILE, "r") as f:
+                records = json.load(f)
+        records = [r for r in records if r.get("analysisId") != data.get("analysisId")]
+        records.insert(0, data)
+        with open(HISTORY_FILE, "w") as f:
+            json.dump(records[:100], f, indent=2)
+    except Exception as e:
+        print(f"Local history save warning: {e}")
+
+def get_analyses_local(limit: int = 20):
+    try:
+        if os.path.exists(HISTORY_FILE):
+            with open(HISTORY_FILE, "r") as f:
+                records = json.load(f)
+                return records[:limit]
+    except Exception as e:
+        print(f"Local history read warning: {e}")
+    return []
+
 def calculate_water_volume(area_m2: float, rainfall_mm: float, runoff_coeff: float) -> dict:
     """
     Standard Hydrological Runoff / Water Harvesting Formula:
@@ -227,12 +253,15 @@ async def analyze_contour(
         }
 
         # Persist to MongoDB Atlas if available
+        doc_to_save = dict(analysis_data)
+        doc_to_save.pop("contours", None)
+        save_analysis_local(doc_to_save)
+
         col = get_collection()
         if col is not None:
             try:
-                doc_to_save = dict(analysis_data)
-                doc_to_save.pop("contours", None)
                 col.insert_one(doc_to_save)
+                print(f"✅ Successfully persisted analysis {doc_to_save.get(analysisId)} to MongoDB Atlas")
             except Exception as db_err:
                 print(f"Failed to persist to MongoDB: {db_err}")
 
@@ -260,20 +289,42 @@ def recalculate_volume(req: VolumeRecalcRequest):
 
 @app.get("/api/analyses")
 def list_analyses(limit: int = Query(20, ge=1, le=100)):
+    results = []
     col = get_collection()
-    if col is None:
-        return {"success": True, "count": 0, "analyses": []}
+    if col is not None:
+        try:
+            cursor = col.find({}, {"_id": 0, "contours": 0}).sort("createdAt", -1).limit(limit)
+            results = list(cursor)
+        except Exception as e:
+            print(f"MongoDB query notice: {e}")
 
+    if not results:
+        results = get_analyses_local(limit)
+
+    return {
+        "success": True,
+        "count": len(results),
+        "analyses": results
+    }
+
+@app.delete("/api/analyses/{analysis_id}")
+def delete_analysis(analysis_id: str):
+    col = get_collection()
+    if col is not None:
+        try:
+            col.delete_one({"analysisId": analysis_id})
+        except Exception:
+            pass
     try:
-        cursor = col.find({}, {"_id": 0, "contours": 0}).sort("createdAt", -1).limit(limit)
-        results = list(cursor)
-        return {
-            "success": True,
-            "count": len(results),
-            "analyses": results
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database query failed: {str(e)}")
+        if os.path.exists(HISTORY_FILE):
+            with open(HISTORY_FILE, "r") as f:
+                records = json.load(f)
+            records = [r for r in records if r.get("analysisId") != analysis_id]
+            with open(HISTORY_FILE, "w") as f:
+                json.dump(records, f, indent=2)
+    except Exception:
+        pass
+    return {"success": True, "message": "Analysis deleted successfully"}
 
 
 @app.get("/api/analyses/{analysis_id}")

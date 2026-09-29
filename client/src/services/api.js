@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// Detect whether running under Vite proxy, direct relative path, or custom environment
+const API_BASE_URL = import.meta.env.VITE_API_URL || (window.location.port === '5000' ? '/api' : 'http://localhost:5000/api');
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -17,9 +18,28 @@ export const getHealth = async () => {
   }
 };
 
+/**
+ * Fast contour parsing endpoint: returns vector contour lines and bounding metadata
+ * so the map can render terrain contours immediately without triggering automated pond analysis.
+ */
+export const parseContours = async (file) => {
+  const formData = new FormData();
+  formData.append('contour_map', file);
+  formData.append('file', file);
+
+  const response = await api.post('/parse-contours', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return response.data;
+};
+
+/**
+ * Full topographic and hydrological analysis endpoint
+ */
 export const analyzeContour = async (file, selectedArea = null, rainfallMm = 100.0, runoffCoeff = 0.70) => {
   const formData = new FormData();
-  // Support both field names for maximum backward/forward compatibility
   formData.append('contour_map', file);
   formData.append('file', file);
   

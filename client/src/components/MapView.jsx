@@ -25,28 +25,29 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Dynamic Ranked Candidate Marker Icon Generator
+// Dynamic Ranked Candidate Marker Icon Generator with Strongly Highlighted #1 Best Pond
 const createCandidateIcon = (rank, isRecommended = false, isActive = false) => {
   if (isRecommended || rank === 1) {
     return new L.DivIcon({
-      className: `custom-pond-marker-container ${isActive ? 'focused-marker' : ''}`,
+      className: `best-pond-marker-container ${isActive ? 'focused-marker' : ''}`,
       html: `
-        <div class="pond-marker-pulse"></div>
-        <div class="pond-marker-pin rank-primary">
-          <div class="rank-number">#1</div>
+        <div class="best-pond-pulse-ring"></div>
+        <div class="best-pond-floating-label">🏆 BEST POND</div>
+        <div class="best-pond-pin-body">
+          <span>🏆</span>
         </div>
       `,
-      iconSize: [38, 38],
-      iconAnchor: [19, 38],
-      popupAnchor: [0, -40]
+      iconSize: [52, 52],
+      iconAnchor: [26, 48],
+      popupAnchor: [0, -50]
     });
   }
 
   return new L.DivIcon({
-    className: `custom-candidate-marker ${isActive ? 'focused-marker' : ''}`,
+    className: `alt-pond-marker-container ${isActive ? 'focused-marker' : ''}`,
     html: `
-      <div class="candidate-marker-pin rank-alt">
-        <span class="cand-rank-num">#${rank}</span>
+      <div class="alt-pond-pin-body">
+        <span>#${rank}</span>
       </div>
     `,
     iconSize: [28, 28],
@@ -55,22 +56,39 @@ const createCandidateIcon = (rank, isRecommended = false, isActive = false) => {
   });
 };
 
-// Bounds, Zoom, and Active Site Manager
+// Map Size Invalidator and Bounds Controller
 const MapController = ({ bounds, selectedArea, activeCandidate }) => {
   const map = useMap();
 
+  // Invalidate size on mount and window resize so Leaflet map is never blank
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+    }, 200);
+
+    const handleResize = () => map.invalidateSize();
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [map]);
+
+  // Handle bounds and flying to active candidate
   useEffect(() => {
     if (activeCandidate && activeCandidate.latitude && activeCandidate.longitude) {
       map.flyTo([activeCandidate.latitude, activeCandidate.longitude], Math.max(map.getZoom(), 15), {
         animate: true,
         duration: 0.8
       });
-    } else if (bounds) {
+    } else if (bounds && bounds.minLat && bounds.maxLat && bounds.minLng && bounds.maxLng) {
       const b = L.latLngBounds(
         L.latLng(bounds.minLat, bounds.minLng),
         L.latLng(bounds.maxLat, bounds.maxLng)
       );
-      map.fitBounds(b, { padding: [30, 30], maxZoom: 16 });
+      map.invalidateSize();
+      map.fitBounds(b, { padding: [40, 40], maxZoom: 16 });
     } else if (selectedArea && selectedArea.minLat) {
       const b = L.latLngBounds(
         L.latLng(selectedArea.minLat, selectedArea.minLng),
@@ -83,10 +101,21 @@ const MapController = ({ bounds, selectedArea, activeCandidate }) => {
   return null;
 };
 
-// Interactive Land Area Selection Handler
+// Interactive Land Area Selection Handler (Mouse Drag Rectangle)
 const AreaSelectionHandler = ({ isSelecting, onAreaSelected }) => {
   const [startPoint, setStartPoint] = useState(null);
   const [currentPoint, setCurrentPoint] = useState(null);
+  const map = useMap();
+
+  useEffect(() => {
+    if (isSelecting) {
+      map.dragging.disable();
+    } else {
+      map.dragging.enable();
+      setStartPoint(null);
+      setCurrentPoint(null);
+    }
+  }, [isSelecting, map]);
 
   useMapEvents({
     mousedown(e) {
@@ -152,6 +181,7 @@ const AreaSelectionHandler = ({ isSelecting, onAreaSelected }) => {
 
 const MapView = ({
   result,
+  contourData,
   selectedArea,
   onAreaSelected,
   isSelectingArea,
@@ -160,159 +190,180 @@ const MapView = ({
   activeCandidateId,
   onSelectCandidate
 }) => {
-  const [basemap, setBasemap] = useState('dark');
+  // Default basemap is Esri Satellite Imagery
+  const [basemap, setBasemap] = useState('satellite');
   const [showContours, setShowContours] = useState(true);
   const [showCatchment, setShowCatchment] = useState(true);
   const [showCandidates, setShowCandidates] = useState(true);
 
-  // Basemap tile definitions
+  // Basemap tile definitions with Esri Satellite as primary
   const basemaps = {
-    dark: {
-      url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-      attribution: '&copy; CartoDB &copy; OpenStreetMap contributors',
-      name: 'Dark Carto'
-    },
     satellite: {
       url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      attribution: 'Esri, Maxar, Earthstar Geographics',
-      name: 'Satellite'
+      attribution: 'Esri, Maxar, Earthstar Geographics, USDA FSA, USGS, Aerogrid, IGN, IGP',
+      name: 'Esri Satellite'
     },
     streets: {
       url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
       attribution: '&copy; OpenStreetMap contributors',
       name: 'OpenStreetMap'
+    },
+    topo: {
+      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+      attribution: 'Esri, HERE, Garmin, Intermap, increment P Corp.',
+      name: 'Esri Topographic'
     }
   };
 
   const defaultCenter = [21.25, 81.29];
   const defaultZoom = 13;
 
+  // Extract effective contours & bounds from result or immediate contourData
+  const contours = result?.contours || contourData?.contours;
+  const bounds = result?.terrain?.bounds || contourData?.bounds || contourData?.metadata?.bounds;
+
   // Compute elevation color scale for contours
-  const minElev = result?.terrain?.minElevation || 260;
-  const maxElev = result?.terrain?.maxElevation || 310;
+  const minElev = result?.terrain?.minElevation || contourData?.metadata?.minElevation || 260;
+  const maxElev = result?.terrain?.maxElevation || contourData?.metadata?.maxElevation || 310;
   const elevRange = maxElev - minElev || 1;
 
   const getContourStyle = (feature) => {
     const elev = feature?.properties?.elevation || minElev;
     const ratio = Math.max(0, Math.min(1, (elev - minElev) / elevRange));
-    // Color gradient from green (low) to yellow to orange to red (high)
+    // Dynamic color gradient: cyan -> emerald -> amber -> coral
     let color = '#38bdf8';
     if (ratio < 0.25) color = '#34d399';
-    else if (ratio < 0.5) color = '#38bdf8';
+    else if (ratio < 0.50) color = '#a3e635';
     else if (ratio < 0.75) color = '#fbbf24';
     else color = '#f87171';
 
     return {
       color,
-      weight: 1.2,
-      opacity: 0.65
+      weight: 1.5,
+      opacity: 0.85
     };
   };
 
+  const candidates = result?.candidates || result?.pondCandidates || (result?.pondSite ? [result.pondSite] : []);
+  const activeCandidate = candidates.find(c => c.id === activeCandidateId) || candidates[0];
+
   const catchmentStyle = {
-    color: '#10b981',
+    color: (activeCandidate?.rank === 1 || activeCandidate?.isRecommended) ? '#f59e0b' : '#10b981',
     weight: 2.5,
-    fillColor: '#059669',
-    fillOpacity: 0.28,
-    dashArray: '4, 2'
+    dashArray: '4, 4',
+    fillColor: (activeCandidate?.rank === 1 || activeCandidate?.isRecommended) ? '#d97706' : '#10b981',
+    fillOpacity: 0.28
   };
 
-  // Candidates list
-  const candidates = result?.candidates && result.candidates.length > 0 
-    ? result.candidates 
-    : (result?.pondSite ? [result.pondSite] : []);
-
-  const activeCandidate = candidates.find(c => c.id === activeCandidateId);
+  // Active catchment polygon
+  const activeCatchmentPolygon = activeCandidate?.catchment?.polygon || result?.catchment?.polygon;
 
   return (
-    <div className={`map-wrapper ${isSelectingArea ? 'drawing-mode' : ''}`}>
+    <div className="map-view-wrapper">
       {/* Top Map Action Toolbar */}
       <div className="map-toolbar">
         <div className="toolbar-left">
-          <button
-            className={`tool-btn ${isSelectingArea ? 'active' : ''}`}
-            onClick={() => setIsSelectingArea(!isSelectingArea)}
-            title="Click and drag on the map to define a land parcel"
-          >
-            <Crop size={16} />
-            <span>{isSelectingArea ? 'Cancel Drawing' : 'Select Land Area'}</span>
-          </button>
-
-          {selectedArea && (
-            <div className="selection-badge">
-              <CheckCircle2 size={14} className="badge-icon" />
-              <span>Selected: <strong>{selectedArea.areaHectares} ha</strong></span>
-              <button className="badge-clear-btn" onClick={onClearSelection} title="Clear selection">
-                <Trash2 size={13} />
+          <div className="basemap-selector">
+            <Layers size={14} style={{ marginRight: '6px', color: '#94a3b8' }} />
+            <span className="tb-label">Layer:</span>
+            {Object.keys(basemaps).map((key) => (
+              <button
+                key={key}
+                className={`tb-btn ${basemap === key ? 'active' : ''}`}
+                onClick={() => setBasemap(key)}
+              >
+                {basemaps[key].name}
               </button>
-            </div>
-          )}
+            ))}
+          </div>
+
+          <div className="layer-toggles">
+            {contours && (
+              <button
+                className={`tb-toggle-btn ${showContours ? 'active' : ''}`}
+                onClick={() => setShowContours(!showContours)}
+                title="Toggle Topographic Contours"
+              >
+                {showContours ? <Eye size={13} /> : <EyeOff size={13} />}
+                <span>Contours</span>
+              </button>
+            )}
+
+            {result?.catchment && (
+              <button
+                className={`tb-toggle-btn ${showCatchment ? 'active' : ''}`}
+                onClick={() => setShowCatchment(!showCatchment)}
+                title="Toggle Catchment Watershed Basin"
+              >
+                {showCatchment ? <Eye size={13} /> : <EyeOff size={13} />}
+                <span>Catchment</span>
+              </button>
+            )}
+
+            {candidates.length > 0 && (
+              <button
+                className={`tb-toggle-btn ${showCandidates ? 'active' : ''}`}
+                onClick={() => setShowCandidates(!showCandidates)}
+                title="Toggle Pond Candidate Pins"
+              >
+                {showCandidates ? <Eye size={13} /> : <EyeOff size={13} />}
+                <span>Sites ({candidates.length})</span>
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="toolbar-right">
-          {/* Layer visibility toggles */}
-          {result && (
-            <div className="layer-toggles">
-              <button 
-                className={`layer-toggle-btn ${showContours ? 'active' : ''}`}
-                onClick={() => setShowContours(!showContours)}
-                title="Toggle Contour Lines"
-              >
-                {showContours ? <Eye size={14} /> : <EyeOff size={14} />} Contours
-              </button>
-              <button 
-                className={`layer-toggle-btn ${showCatchment ? 'active' : ''}`}
-                onClick={() => setShowCatchment(!showCatchment)}
-                title="Toggle Catchment Polygon"
-              >
-                {showCatchment ? <Eye size={14} /> : <EyeOff size={14} />} Catchment
-              </button>
-              <button 
-                className={`layer-toggle-btn ${showCandidates ? 'active' : ''}`}
-                onClick={() => setShowCandidates(!showCandidates)}
-                title="Toggle Candidate Sites"
-              >
-                {showCandidates ? <Eye size={14} /> : <EyeOff size={14} />} Sites ({candidates.length})
-              </button>
-            </div>
-          )}
+          {/* Mouse drag selection trigger */}
+          <button
+            className={`btn-draw-area ${isSelectingArea ? 'active' : ''}`}
+            onClick={() => setIsSelectingArea(!isSelectingArea)}
+          >
+            <Crop size={15} />
+            <span>{isSelectingArea ? 'Cancel Drag Selection' : 'Select Land Area'}</span>
+          </button>
 
-          {/* Basemap switcher */}
-          <div className="basemap-selector">
-            <Layers size={14} style={{ color: 'var(--text-muted)' }} />
-            <select value={basemap} onChange={(e) => setBasemap(e.target.value)}>
-              <option value="dark">Dark Theme</option>
-              <option value="satellite">Satellite Imagery</option>
-              <option value="streets">Streets</option>
-            </select>
-          </div>
+          {selectedArea && (
+            <button
+              className="btn-clear-area"
+              onClick={onClearSelection}
+              title="Clear selected land area"
+            >
+              <Trash2 size={14} />
+              <span>Clear Parcel</span>
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Drawing Instructions Banner */}
+      {/* Selection Drawing Prompt Overlay */}
       {isSelectingArea && (
-        <div className="drawing-instructions-banner">
+        <div className="drawing-banner">
           <Crop size={16} className="pulse-icon" />
-          <span>Click and drag on the map to draw your target Land Area parcel</span>
+          <span>Click and drag a rectangle on the satellite map to select your target land parcel.</span>
         </div>
       )}
 
-      {/* The Leaflet Map Container */}
-      <div className="map-inner-container">
+      {/* Interactive Leaflet Map Container */}
+      <div className="map-container-relative">
         <MapContainer
           center={defaultCenter}
           zoom={defaultZoom}
-          style={{ height: '100%', width: '100%' }}
           scrollWheelZoom={true}
+          className="leaflet-map-canvas"
+          style={{ height: '100%', width: '100%', minHeight: '540px' }}
         >
+          {/* Base Imagery Tile Layer */}
           <TileLayer
-            attribution={basemaps[basemap].attribution}
+            key={basemap}
             url={basemaps[basemap].url}
+            attribution={basemaps[basemap].attribution}
+            maxZoom={19}
           />
 
-          {/* Auto bounds controller */}
+          {/* Dynamic Controller for Bounds, Zoom & FlyTo */}
           <MapController 
-            bounds={result?.terrain?.bounds} 
+            bounds={bounds} 
             selectedArea={selectedArea}
             activeCandidate={activeCandidate}
           />
@@ -350,11 +401,11 @@ const MapView = ({
             </Rectangle>
           )}
 
-          {/* Topographic Contour Lines */}
-          {result && result.contours && showContours && (
+          {/* Topographic Contour Lines (visible immediately on file select) */}
+          {contours && showContours && (
             <GeoJSON
-              key={`contours-${result.analysisId || 'default'}`}
-              data={result.contours}
+              key={`contours-${result?.analysisId || contourData?.filename || 'default'}-${contours.features?.length}`}
+              data={contours}
               style={getContourStyle}
               onEachFeature={(feature, layer) => {
                 const elev = feature?.properties?.elevation;
@@ -366,17 +417,22 @@ const MapView = ({
           )}
 
           {/* Upstream Catchment GeoJSON Polygon */}
-          {result && result.catchment && result.catchment.polygon && showCatchment && (
+          {activeCatchmentPolygon && showCatchment && (
             <GeoJSON
-              key={`catchment-${result.analysisId || 'default'}`}
-              data={result.catchment.polygon}
+              key={`catchment-${result?.analysisId || 'default'}-${activeCandidate?.id || 'main'}`}
+              data={activeCatchmentPolygon}
               style={catchmentStyle}
               onEachFeature={(feature, layer) => {
+                const cArea = activeCandidate?.catchment?.areaHectares || result?.catchment?.areaHectares;
+                const cAreaM2 = activeCandidate?.catchment?.areaSquareMeters || result?.catchment?.areaSquareMeters;
+                const isRank1 = (activeCandidate?.rank === 1) || activeCandidate?.isRecommended;
                 layer.bindPopup(`
                   <div class="custom-map-popup">
-                    <h4 style={{ color: '#10b981' }}>Delineated Catchment Basin</h4>
-                    <p>Area: <strong>{result.catchment.areaHectares.toFixed(2)} ha</strong> ({result.catchment.areaSquareMeters.toLocaleString()} m²)</p>
-                    <p style={{ color: '#94a3b8', fontSize: '11px' }}>Upstream runoff watershed calculated via D8 flow direction</p>
+                    <h4 style="color:${isRank1 ? '#fbbf24' : '#10b981'};">
+                      ${isRank1 ? '🏆 Best Pond Catchment Basin' : 'Upstream Catchment Basin (Candidate #' + (activeCandidate?.rank || 1) + ')'}
+                    </h4>
+                    <p>Area: <strong>${cArea ? cArea.toFixed(2) : '0'} ha</strong> (${cAreaM2 ? cAreaM2.toLocaleString() : '0'} m²)</p>
+                    <p style="color: #94a3b8; font-size: 11px;">Upstream runoff watershed calculated via D8 flow direction</p>
                   </div>
                 `);
               }}
@@ -385,15 +441,17 @@ const MapView = ({
 
           {/* Multiple Candidate Pond Sites Pins */}
           {result && showCandidates && candidates.map((cand, idx) => {
-            const isRank1 = (cand.rank === 1) || (!cand.rank && idx === 0);
+            const isRank1 = (cand.rank === 1) || (cand.isRecommended === true) || (!cand.rank && idx === 0);
             const isActive = cand.id === activeCandidateId || (isRank1 && !activeCandidateId);
-            const icon = createCandidateIcon(cand.rank || idx + 1, isRank1, isActive);
+            const rankNum = cand.rank || (idx + 1);
+            const icon = createCandidateIcon(rankNum, isRank1, isActive);
 
             return (
               <Marker
                 key={cand.id || `candidate-${idx}`}
                 position={[cand.latitude, cand.longitude]}
                 icon={icon}
+                zIndexOffset={isRank1 ? 2500 : 500}
                 eventHandlers={{
                   click: () => {
                     if (onSelectCandidate) onSelectCandidate(cand);
@@ -401,53 +459,77 @@ const MapView = ({
                 }}
               >
                 <Popup autoPan={true} className={isRank1 ? 'optimal-pond-popup' : 'candidate-pond-popup'}>
-                  <div className="custom-map-popup">
-                    <div className="popup-badge" style={{ background: isRank1 ? 'rgba(56,189,248,0.2)' : 'rgba(251,191,36,0.2)', color: isRank1 ? '#38bdf8' : '#fbbf24' }}>
-                      {isRank1 ? '★ Rank #1 (Recommended Site)' : `Candidate Site #${cand.rank || idx + 1}`}
-                    </div>
-                    <h4 style={{ color: isRank1 ? '#38bdf8' : '#fff', fontSize: '0.95rem', marginTop: '4px' }}>
-                      {cand.name || `Pond Site #${cand.rank || idx + 1}`}
+                  <div className="custom-map-popup" style={{ minWidth: isRank1 ? '245px' : '220px' }}>
+                    {isRank1 ? (
+                      <div style={{ fontSize: '0.72rem', fontWeight: 800, background: 'rgba(245,158,11,0.25)', border: '1.5px solid #f59e0b', color: '#fbbf24', padding: '0.2rem 0.6rem', borderRadius: '6px', display: 'inline-flex', alignItems: 'center', gap: '4px', letterSpacing: '0.03em' }}>
+                        <span>🏆</span>
+                        <span>BEST SUITABLE POND LOCATION</span>
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: '0.68rem', fontWeight: 700, background: 'rgba(56,189,248,0.18)', border: '1px solid rgba(56,189,248,0.4)', color: '#38bdf8', padding: '0.15rem 0.5rem', borderRadius: '4px', display: 'inline-block' }}>
+                        Alternative Candidate Site #{rankNum}
+                      </div>
+                    )}
+
+                    <h4 style={{ color: isRank1 ? '#fbbf24' : '#38bdf8', fontSize: isRank1 ? '1.02rem' : '0.95rem', fontWeight: 800, marginTop: '5px' }}>
+                      {cand.name || (isRank1 ? 'Rank #1 Optimal Pond Site' : `Pond Site #${rankNum}`)}
                     </h4>
                     
                     <div className="popup-grid">
-                      <div className="popup-stat">
-                        <span className="lbl">Latitude:</span>
-                        <span className="val">{cand.latitude.toFixed(5)}°N</span>
-                      </div>
-                      <div className="popup-stat">
-                        <span className="lbl">Longitude:</span>
-                        <span className="val">{cand.longitude.toFixed(5)}°E</span>
-                      </div>
-                      <div className="popup-stat">
-                        <span className="lbl">Elevation:</span>
-                        <span className="val">{cand.elevation.toFixed(1)} m</span>
-                      </div>
-                      <div className="popup-stat highlight">
+                      <div className="highlight">
                         <span className="lbl">Suitability:</span>
-                        <span className="val">{((cand.suitabilityScore || 0.8) * 100).toFixed(1)}%</span>
+                        <span className="val" style={{ color: isRank1 ? '#fbbf24' : '#38bdf8', fontSize: '0.92rem' }}>
+                          {((cand.suitabilityScore || 0.8) * 100).toFixed(1)}%
+                        </span>
                       </div>
-                      {cand.expectedVolumeM3 && (
-                        <div className="popup-stat success" style={{ gridColumn: 'span 2' }}>
-                          <span className="lbl">Expected Inflow Volume:</span>
-                          <span className="val">{cand.expectedVolumeM3.toLocaleString()} m³</span>
-                        </div>
-                      )}
-                      <div className="popup-stat" style={{ gridColumn: 'span 2' }}>
+                      <div>
+                        <span className="lbl">Elevation:</span>
+                        <span className="val">{cand.elevation?.toFixed(1)} m</span>
+                      </div>
+                      <div>
+                        <span className="lbl">Catchment:</span>
+                        <span className="val" style={{ color: '#34d399' }}>
+                          {(cand.catchmentAreaHectares || cand.catchment?.areaHectares || 10).toFixed(2)} ha
+                        </span>
+                      </div>
+                      <div>
+                        <span className="lbl">Expected Water:</span>
+                        <span className="val" style={{ color: '#60a5fa' }}>
+                          {(cand.expectedVolumeM3 || cand.waterVolume?.expectedVolumeM3 || 8000).toLocaleString()} m³
+                        </span>
+                      </div>
+                      <div style={{ gridColumn: 'span 2' }}>
+                        <span className="lbl">Coordinates:</span>
+                        <span className="val">{cand.latitude.toFixed(5)}°N, {cand.longitude.toFixed(5)}°E</span>
+                      </div>
+                      <div style={{ gridColumn: 'span 2' }}>
                         <span className="lbl">Distance to Channel:</span>
                         <span className="val">~{Math.round(cand.distanceToChannelMeters || 0)} m safe buffer</span>
                       </div>
                     </div>
 
-                    <div className="popup-reason">
+                    <div className="popup-reason" style={{ borderColor: isRank1 ? '#f59e0b' : '#38bdf8', color: '#cbd5e1' }}>
                       {cand.reason}
                     </div>
 
                     <div style={{ marginTop: '0.6rem', textAlign: 'center' }}>
                       <button 
                         className="btn-popup-select"
+                        style={{
+                          background: isRank1 ? 'linear-gradient(135deg, #d97706, #b45309)' : '#0284c7',
+                          color: '#fff',
+                          border: isRank1 ? '1px solid #fef08a' : 'none',
+                          padding: '0.4rem 0.9rem',
+                          borderRadius: '6px',
+                          fontSize: '0.75rem',
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          width: '100%',
+                          boxShadow: isRank1 ? '0 2px 10px rgba(245,158,11,0.4)' : 'none'
+                        }}
                         onClick={() => onSelectCandidate && onSelectCandidate(cand)}
                       >
-                        Inspect &amp; Compare This Site
+                        {isRank1 ? '✓ Focus Best Pond Catchment' : 'Focus & Delineate Catchment on Map'}
                       </button>
                     </div>
                   </div>
@@ -461,16 +543,16 @@ const MapView = ({
         <div className="map-floating-legend">
           <div className="legend-title">GIS Symbology</div>
           <div className="legend-item">
-            <span className="sym-pond rank-1-sym"></span>
-            <span>Rank #1 Recommended Pond</span>
+            <span className="sym-pond rank-1-sym" style={{ background: '#f59e0b', borderColor: '#fef08a' }}></span>
+            <span>🏆 Best Suitable Pond (#1)</span>
           </div>
           <div className="legend-item">
             <span className="sym-candidate-pin"></span>
-            <span>Alternate Candidates (#2 - #{candidates.length})</span>
+            <span>Alternate Candidates (#2 - #{candidates.length || 5})</span>
           </div>
           <div className="legend-item">
             <span className="sym-catchment"></span>
-            <span>Catchment Basin ({result?.catchment?.areaHectares ? `${result.catchment.areaHectares.toFixed(1)} ha` : 'Upstream Watershed'})</span>
+            <span>Catchment Basin ({activeCandidate?.catchment?.areaHectares ? `${activeCandidate.catchment.areaHectares.toFixed(1)} ha` : 'Upstream Watershed'})</span>
           </div>
           {selectedArea && (
             <div className="legend-item">
@@ -478,10 +560,12 @@ const MapView = ({
               <span>Selected Land Parcel ({selectedArea.areaHectares} ha)</span>
             </div>
           )}
-          <div className="legend-item">
-            <span className="sym-contour"></span>
-            <span>Topographic Contours (m)</span>
-          </div>
+          {contours && (
+            <div className="legend-item">
+              <span className="sym-contour"></span>
+              <span>Topographic Contours ({minElev}m - {maxElev}m)</span>
+            </div>
+          )}
         </div>
       </div>
     </div>

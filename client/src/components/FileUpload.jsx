@@ -10,17 +10,23 @@ import {
   HelpCircle,
   FileCode2,
   Sparkles,
-  RefreshCw
+  RefreshCw,
+  CheckCircle2,
+  Loader2
 } from 'lucide-react';
 
 const FileUpload = ({ 
   onUpload, 
+  onFileSelected,
+  selectedFile,
+  contourData,
+  contourLoading,
+  contourStatus,
   error, 
   selectedArea, 
   isSelectingArea, 
   setIsSelectingArea 
 }) => {
-  const [selectedFile, setSelectedFile] = useState(null);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef(null);
   
@@ -69,7 +75,9 @@ const FileUpload = ({
     if (!file) return;
     const ext = file.name.split('.').pop().toLowerCase();
     if (ext === 'kml' || ext === 'kmz') {
-      setSelectedFile(file);
+      if (onFileSelected) {
+        onFileSelected(file);
+      }
     } else {
       alert('Please select a KML or KMZ contour file (.kml, .kmz).');
     }
@@ -82,15 +90,36 @@ const FileUpload = ({
 
   return (
     <div className="upload-container">
-      <div className="upload-header">
-        <h2>Topographic Ingestion</h2>
-        <p>Upload KML/KMZ elevation contours to delineate catchments and calculate optimal village pond sites.</p>
+      <div className="upload-header-row">
+        <h2 className="section-heading">Topographic Ingestion</h2>
+        <span className="step-badge">Step 1</span>
       </div>
+      <p className="section-desc">
+        Select a high-resolution contour vector file (<strong>.kml</strong> or <strong>.kmz</strong>) to render terrain contours on satellite imagery and calculate pond catchments.
+      </p>
 
       {error && (
         <div className="alert alert-error">
           <AlertCircle size={18} style={{ flexShrink: 0 }} />
           <div>{error}</div>
+        </div>
+      )}
+
+      {/* Parsing / Loading State Banner */}
+      {contourLoading && (
+        <div className="alert alert-info" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.3)', color: '#38bdf8', padding: '10px 14px', borderRadius: '8px', marginBottom: '1rem' }}>
+          <Loader2 size={18} className="animate-spin" style={{ animation: 'spin 1s linear infinite' }} />
+          <div><strong>Parsing contour map...</strong> Ingesting vector elevation features</div>
+        </div>
+      )}
+
+      {/* Success State Banner */}
+      {!contourLoading && contourData && (
+        <div className="alert alert-success" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', color: '#34d399', padding: '10px 14px', borderRadius: '8px', marginBottom: '1rem' }}>
+          <CheckCircle2 size={18} />
+          <div>
+            <strong>Contour map loaded successfully.</strong> {contourData.metadata?.contourCount || 0} contours ({contourData.metadata?.minElevation}m – {contourData.metadata?.maxElevation}m)
+          </div>
         </div>
       )}
 
@@ -122,7 +151,7 @@ const FileUpload = ({
             <div className="file-meta">
               <span>{(selectedFile.size / (1024 * 1024)).toFixed(2)} MB</span>
               <span className="file-badge">.{selectedFile.name.split('.').pop().toUpperCase()}</span>
-              <span style={{ color: '#34d399', fontSize: '0.75rem', fontWeight: 600 }}>✓ Valid Vector</span>
+              <span style={{ color: '#34d399', fontSize: '0.75rem', fontWeight: 600 }}>✓ Ingested</span>
             </div>
             <button 
               type="button" 
@@ -263,16 +292,16 @@ const FileUpload = ({
       <button 
         className="btn btn-primary" 
         onClick={handleStartAnalysis}
-        disabled={!selectedFile}
+        disabled={!selectedFile || contourLoading}
       >
         <Sparkles size={18} />
-        {selectedArea ? 'Analyze Selected Land Area' : 'Select Land Area to Analyze'}
+        {selectedArea ? 'Analyze Selected Land Area' : 'Analyze Entire Contour Area'}
       </button>
 
       {/* Demo helper */}
       <div className="demo-hint-box">
         <FileCode2 size={15} />
-        <span>Ready with standard contour files (e.g. <code>contour_map.kml</code>)</span>
+        <span>Ready with standard contour files (e.g. <code>contour_map.kml</code>, <code>.kmz</code>)</span>
       </div>
     </div>
   );

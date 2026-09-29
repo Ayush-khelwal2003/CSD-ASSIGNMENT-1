@@ -1,254 +1,129 @@
-# CSD Assignment 1 – Phase 2: Pond Catchment Analysis Backend
+# CSD Assignment 1 — Interactive GIS Village Pond-Site Selection System
 
-## Project Overview
-This project provides a full-stack solution to analyze topographic contour maps (in KML/KMZ format), identify suitable LAND locations for a water catchment pond, and calculate the contributing catchment area dynamically without hard-coding any values. 
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![Python](https://img.shields.io/badge/Python-3.10+-blue.svg?logo=python&logoColor=white)](https://python.org)
+[![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248.svg?logo=mongodb&logoColor=white)](https://mongodb.com)
+[![Leaflet](https://img.shields.io/badge/Leaflet-1.9.4-199900.svg?logo=leaflet&logoColor=white)](https://leafletjs.com)
+[![License](https://img.shields.io/badge/License-Academic-lightgrey.svg)]()
 
-**Important:** The system does NOT simply select the lowest point on the map or place the pond directly on the strongest drainage channel (e.g., a river/stream bed). Instead, it uses a multi-factor suitability scoring system to find an ideal land location adjacent to drainage pathways that has excellent water-retention and upstream catchment potential.
+> **Phase 3:** Full Interactive GIS Dashboard with Real-time Contour Ingestion, Rectangle Parcel Selection, Best Pond Marker Highlighting, Dynamic D8 Catchment Delineation, Water Volume Simulation, and Persistent MongoDB Atlas Analysis History.
 
-## Features
-- Parses arbitrary KML/KMZ files to extract contour geometries and elevation data.
-- Constructs a Digital Elevation Model (DEM) via Triangulated Irregular Network (TIN) interpolation.
-- Calculates D8 Flow Direction and Flow Accumulation to trace water movement.
-- **Multi-candidate pond selection** with **drainage-channel avoidance**.
-- **Suitability scoring** based on elevation, slope, local depression, terrain convergence, and catchment potential.
-- **Configurable scoring weights** for tuning across different contour maps.
-- **Catchment estimation using D8** flow routing (upstream trace) to delineate the exact upstream catchment polygon and calculate its area.
-- Persists all analyses to MongoDB.
-- Provides a responsive React frontend with interactive Leaflet map rendering.
+---
 
-## Technology Stack
-- **Frontend**: React, Vite, Leaflet, React-Leaflet, Axios, Lucide React
-- **Backend**: Node.js, Express.js, Multer, Morgan
-- **Database**: MongoDB (Atlas), Mongoose
-- **Geospatial Processing**: Turf.js, @xmldom/xmldom (XML parsing), adm-zip (KMZ extraction)
+## 🚀 Live Production & Demo URLs
 
-## Architecture & Folder Structure
-```text
-CSD_assignment/
-├── README.md               # This file
-├── .gitignore
-├── client/                 # React frontend
-│   ├── index.html
-│   ├── package.json
-│   ├── vite.config.js
-│   ├── .env                # Contains VITE_API_URL
-│   └── src/
-│       ├── App.jsx
-│       ├── main.jsx
-│       ├── index.css       # Global styles (Dark Theme)
-│       ├── services/
-│       │   └── api.js      # Axios API wrapper
-│       └── components/
-│           ├── FileUpload.jsx
-│           ├── MapView.jsx
-│           └── ResultsPanel.jsx
-└── server/                 # Express backend
-    ├── package.json
-    ├── .env                # Environment variables
-    └── src/
-        ├── app.js          # Express app configuration
-        ├── server.js       # Entry point
-        ├── controllers/
-        │   └── analysisController.js
-        ├── middleware/
-        │   ├── errorHandler.js
-        │   └── upload.js
-        ├── models/
-        │   └── Analysis.js # MongoDB schema
-        ├── routes/
-        │   └── analysisRoutes.js
-        ├── services/
-        │   ├── analysisService.js       # Orchestrator
-        │   ├── catchmentAnalysis.js     # Upstream trace & area calc
-        │   ├── contourParser.js         # KML/KMZ parsing
-        │   ├── pondSiteSelection.js     # Multi-criteria pond selection
-        │   └── terrainAnalysis.js       # TIN, DEM, and Flow routing
-        └── utils/
-            └── geometry.js              # Haversine, bounds, barycentric interpolation
+- **GitHub Repository:** [https://github.com/Ayush-khelwal2003/CSD-ASSIGNMENT-1](https://github.com/Ayush-khelwal2003/CSD-ASSIGNMENT-1)
+- **Local Development URL:** `http://localhost:5000` (or `http://10.1.75.51:5000` inside campus network)
+- **Production API Health:** `/api/health`
+
+---
+
+## 🌟 Key Features
+
+1. **Topographic Ingestion:** Native upload and parsing for both `.kml` and zipped `.kmz` contour vector files.
+2. **Esri Satellite Cartography:** High-resolution World Imagery basemap tile service with dynamic contour overlay.
+3. **Interactive Land Selection:** Mouse drag-and-drop rectangle bounding tool allowing users to define any target parcel.
+4. **Multi-Candidate Site Evaluation:** Evaluates and scores thousands of terrain cells strictly within the selected parcel.
+5. **Spatial Diversity Filtering:** Employs a greedy Euclidean distance buffer ($\ge 100\text{ m}$) yielding 5 distinct site alternatives.
+6. **🏆 Highlighted Best Pond Site:** Candidate #1 is visually distinguished with an animated gold glow pulse, trophy badge, elevated z-index, and comprehensive suitability breakdown.
+7. **Hydrological Catchment Basins:** Recursive reverse-D8 drainage tracing generates candidate-specific watershed polygons.
+8. **Water Volume Simulation:** Calculates harvest volume using the rational equation $V = A \times P \times C$ with real-time sliders for rainfall and runoff coefficients.
+9. **Analysis History Drawer:** Stores every completed run in MongoDB Atlas with single-click dashboard restoration.
+10. **Zero-Bloat Single Service:** FastAPI serves both the high-performance GIS computation engine and the sleek frontend dashboard.
+
+---
+
+## 🏛️ System Architecture
+
+```
+[ Browser / Leaflet GIS ]
+          │  Uploads KML/KMZ & Rectangle Coordinates
+          ▼
+[ FastAPI Backend (python_server/main.py) ]
+    ├── services/contour_parser.py     (Extracts Contours & Elevations)
+    ├── services/terrain_analysis.py   (Delaunay TIN & Regular DEM)
+    ├── services/pond_site_selection.py (D8 Slopes, Depressions & Scoring)
+    └── services/catchment_analysis.py (Reverse-D8 Watershed Delineation)
+          │
+          ├──► [ MongoDB Atlas Cluster ] (Persistent Run Metadata)
+          └──► [ JSON Fail-safe Store ]   (Local Storage Redundancy)
 ```
 
-## Installation
+---
 
-### Prerequisites
-- Node.js v18+ 
-- A MongoDB cluster (e.g., MongoDB Atlas)
+## 🛠️ Technology Stack
 
-### 1. MongoDB Setup
-This project uses MongoDB Atlas. 
-1. Create a free cluster on MongoDB Atlas.
-2. Obtain your connection string.
-3. Replace `<username>` and `<password>` in your connection string.
+| Layer | Component | Description |
+|---|---|---|
+| **Backend** | Python 3.10+, FastAPI, Uvicorn | High-throughput asynchronous ASGI microservice |
+| **GIS / Math** | NumPy, SciPy, Shapely | Vectorized raster processing, Delaunay TIN, spatial polygons |
+| **Database** | MongoDB Atlas via `pymongo` | Remote cloud NoSQL storage for analysis history |
+| **Frontend** | HTML5, CSS3 Glassmorphism, ES6+ | Lightweight, responsive single-page GIS dashboard |
+| **Mapping** | Leaflet.js 1.9.4 | Interactive web mapping and GeoJSON rendering |
+| **Imagery** | Esri World Imagery | High-resolution satellite basemap tiles |
+| **Deployment** | Render (`render.yaml`) | Automatic cloud container deployment via Git push |
 
-### 2. Backend Setup
+---
+
+## 💻 Local Setup & Execution
+
+### 1. Clone Repository
 ```bash
-cd server
-npm install
-# Create a .env file based on .env.example
-cp .env.example .env
-# Edit .env and set MONGODB_URI to your Atlas connection string
-npm run dev
+git clone https://github.com/Ayush-khelwal2003/CSD-ASSIGNMENT-1.git
+cd CSD-ASSIGNMENT-1
 ```
-The server will run on `http://localhost:5000`
 
-### 3. Frontend Setup
+### 2. Configure Environment
+Create `python_server/.env` (do **not** commit this file):
+```env
+MONGODB_URI=mongodb+srv://root:root@cluster123.lzzj9ao.mongodb.net/?appName=Cluster123
+PORT=5000
+```
+
+### 3. Install Dependencies & Run
 ```bash
-cd client
-npm install
-npm run dev
+cd python_server
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python3 run.py
 ```
-The client will run on `http://localhost:5173` or `http://localhost:5174` (check the console output).
+Open your browser at `http://localhost:5000`.
 
 ---
 
-## API Documentation
+## 🌐 Public Deployment (Render)
 
-### POST `/api/analyze-contour`
-Analyzes a KML or KMZ contour map.
+This repository includes a `render.yaml` blueprint ready for deployment:
 
-**Request Format:**
-- `Content-Type`: `multipart/form-data`
-- `Field`: `file` (the uploaded .kml or .kmz file)
-
-**Exact curl Command (for testing):**
-```bash
-curl -X POST http://localhost:5000/api/analyze-contour -F "file=@contours_1m.kml"
-```
-
-**Example API Response (Generated dynamically from contours_1m.kml):**
-```json
-{
-  "success": true,
-  "input": {
-    "filename": "contours_1m.kml",
-    "format": "KML"
-  },
-  "terrain": {
-    "minElevation": 267,
-    "maxElevation": 298,
-    "contourCount": 1355,
-    "contourInterval": 1,
-    "bounds": {
-      "minLng": 81.2814044952393,
-      "maxLng": 81.3126468658447,
-      "minLat": 21.2398224433387,
-      "maxLat": 21.2635806472203
-    }
-  },
-  "pondSite": {
-    "latitude": 21.261496837946193,
-    "longitude": 81.28706717491153,
-    "elevation": 274.34,
-    "reason": "Land site selected: ~236m offset from the main drainage channel (avoids stream/river); natural depression (3.10m below surrounding terrain); low slope (suitable for pond construction); terrain convergence (100% of neighbors higher); upstream catchment contributing area (flow accumulation: 23); located in lower portion of terrain.",
-    "suitabilityScore": 0.8991,
-    "scoreBreakdown": {
-      "elevation": 0.7631,
-      "slope": 0.8417,
-      "depression": 0.999,
-      "convergence": 1,
-      "catchment": 0.7338,
-      "channelOffset": 1
-    },
-    "distanceToChannelMeters": 235.87
-  },
-  "catchment": {
-    "areaSquareMeters": 40419.71,
-    "areaHectares": 4.042,
-    "areaSquareKilometers": 0.0404,
-    "polygon": {
-      "type": "Polygon",
-      "coordinates": [ /* ... GeoJSON Polygon ... */ ]
-    }
-  }
-}
-```
-
-### GET `/api/health`
-Check if the server and database are running.
-
-### GET `/api/analyses`
-Get a list of previous analyses stored in MongoDB.
+1. Create a new **Web Service** on [Render](https://render.com).
+2. Connect this repository (`Ayush-khelwal2003/CSD-ASSIGNMENT-1`).
+3. Set the Root Directory to `python_server`.
+4. Configure Build Command: `pip install -r requirements.txt`.
+5. Configure Start Command: `uvicorn main:app --host 0.0.0.0 --port $PORT`.
+6. Add the secret environment variable `MONGODB_URI` in the Render Environment Dashboard.
 
 ---
 
-## Methodologies
+## 📖 API Documentation
 
-### 1. KML/KMZ Processing Methodology
-The parser extracts `<Placemark>` geometries. For `<LineString>` elements, it searches for elevation data in the `<name>`, `<description>`, `<ExtendedData>`, or coordinates. It filters non-numeric data and standardizes geometries into GeoJSON format.
-
-### 2. Terrain Analysis Methodology
-A grid (approx. ~40-50m cell size) is overlaid on the bounding box of the contour map. Points are sampled from the contours to build a Triangulated Irregular Network (TIN). Elevation for each cell is calculated using barycentric interpolation. D8 (Deterministic 8-Node) Flow Direction is then calculated, determining the steepest descent for each grid cell. Finally, Flow Accumulation is generated via a topological sort algorithm (highest to lowest elevation).
-
-### 3. Pond Site Selection Methodology
-The pond site is **not** simply the lowest point on the map or the point with the absolute highest flow accumulation (which would incorrectly place it on a river). Instead, it uses a multi-factor suitability scoring system with explicit drainage-channel avoidance.
-
-Cells are scored against the following configurable criteria:
-- **Distance from drainage channel (Channel Offset Penalty)**: Strongly prefers land locations adequately offset from the main drainage system.
-- **Local Depression**: Preference for natural "terrain bowls" (areas deeper than their 5x5 neighbors).
-- **Slope**: Low gradient / flat areas suitable for construction.
-- **Flow Accumulation**: Ensures there is sufficient upstream catchment potential without selecting the main riverbed.
-- **Terrain Convergence**: The fraction of immediate neighboring cells that are higher.
-- **Elevation**: Preference for lower relative terrain elevations overall.
-
-Multiple candidates are evaluated, and the highest-scoring spatially distinct cell is chosen alongside backup candidate sites.
-
-### 4. Catchment Estimation Methodology
-Starting from the selected pond site (the "pour point"), a Breadth-First Search (BFS) operates backwards on the D8 flow direction grid. It aggregates all grid cells whose simulated runoff pathways ultimately arrive at the pond cell. These cells are converted into a unified GeoJSON polygon via a union operation, and the total geodesic surface area is calculated dynamically using Turf.js.
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/health` | Service health status and MongoDB connection verification |
+| `POST` | `/api/parse-contours` | Parses KML/KMZ into GeoJSON contours and computes bounds |
+| `POST` | `/api/analyze-contour` | Full GIS analysis: DEM, D8 routing, candidates, volume, DB save |
+| `POST` | `/api/recalculate-volume` | Recalculates volume for custom rainfall and runoff coefficients |
+| `GET` | `/api/analyses` | Fetches historical analysis runs from MongoDB Atlas |
+| `DELETE` | `/api/analyses/{id}` | Deletes a specific historical analysis run |
 
 ---
 
-## Limitations
-1. **Grid Resolution Constraints**: Converting continuous vector contours into a rasterized TIN grid inherently generalizes the terrain, meaning small-scale localized variations (e.g., culverts, narrow ditches) may be missed.
-2. **D8 Algorithm Simplification**: The D8 flow direction assumes water only flows into one adjacent cell (steepest descent). In reality, distributary flow over flat areas disperses water in multiple directions, leading to minor inaccuracies in flat regions.
-3. **Hydrological Assumptions**: The system strictly maps topography; it does not model soil infiltration rates, land cover impermeability, or evaporation.
+## 📑 Detailed Report
+
+A comprehensive 26-section technical report is available at [`docs/Phase3_Final_Report.md`](docs/Phase3_Final_Report.md).
 
 ---
 
-## Deployment
+## 📄 License & Attribution
 
-### Backend Deployment on Render
-
-1. **Create a new Web Service** on [Render](https://render.com).
-2. **Connect your GitHub repository**: `Ayush-khelwal2003/CSD-ASSIGNMENT-1`
-3. **Configure the service** with these exact settings:
-
-| Setting          | Value                |
-|------------------|----------------------|
-| **Root Directory** | `server`           |
-| **Build Command**  | `npm install`      |
-| **Start Command**  | `node src/server.js` |
-
-4. **Set Environment Variables** on Render:
-
-| Variable       | Value                                      |
-|----------------|--------------------------------------------|
-| `PORT`         | (Render sets this automatically)            |
-| `MONGODB_URI`  | Your MongoDB Atlas connection string        |
-| `NODE_ENV`     | `production`                                |
-| `CLIENT_URL`   | Your frontend URL (optional, defaults to `*`) |
-
-5. **Deploy** — Render will run `npm install` and start the server automatically.
-
-### API Routes (Available After Deployment)
-
-| Method | Route                  | Description                          |
-|--------|------------------------|--------------------------------------|
-| GET    | `/api/health`          | Health check (server + DB status)    |
-| POST   | `/api/analyze-contour` | Upload and analyze a KML/KMZ file    |
-| GET    | `/api/analyses`        | List all previous analyses           |
-
-### Frontend Deployment (Optional)
-
-1. Deploy the `client/` directory as a **Static Site** on Render.
-2. Set environment variable: `VITE_API_URL=<your-deployed-backend-url>/api`
-3. Build command: `npm run build`, output directory: `dist`.
-
----
-
-## GitHub Commands
-
-```bash
-git add .
-git commit -m "Prepare backend for Render deployment"
-git push origin main
-```
-
+Developed for CSD Assignment 1 (Phase 3). Academic use only.

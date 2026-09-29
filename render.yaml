@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: csd-assignment-1-pond-gis
+    env: python
+    rootDir: python_server
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: PORT
+        value: 10000
+    healthCheckPath: /api/health
+    autoDeploy: true

@@ -1,0 +1,1824 @@
+[
+  {
+    "analysisId": "91b169da-8ed5-4e3f-bc8c-5bc262090e59",
+    "filename": "contour_map.kml",
+    "createdAt": "2026-09-29T14:21:49.633508",
+    "processingTimeMs": 1458,
+    "metadata": {
+      "contourCount": 1355,
+      "minElevation": 267.0,
+      "maxElevation": 298.0,
+      "uniqueElevations": 32,
+      "contourInterval": 1.0,
+      "bounds": {
+        "minLng": 81.2814044952393,
+        "maxLng": 81.3126468658447,
+        "minLat": 21.2398224433387,
+        "maxLat": 21.2635806472203
+      }
+    },
+    "terrain": {
+      "gridRows": 27,
+      "gridCols": 35,
+      "cellSizeMeters": 92.51,
+      "bounds": {
+        "minLng": 81.2814044952393,
+        "maxLng": 81.3126468658447,
+        "minLat": 21.2398224433387,
+        "maxLat": 21.2635806472203
+      },
+      "minElevation": 267.0,
+      "maxElevation": 298.0,
+      "contourCount": 1355
+    },
+    "pondSite": {
+      "id": "candidate-1",
+      "rank": 1,
+      "name": "Candidate #1 (Recommended)",
+      "isRecommended": true,
+      "latitude": 21.25874101,
+      "longitude": 81.31041527,
+      "elevation": 283.26,
+      "row": 21,
+      "col": 32,
+      "suitabilityScore": 0.8401,
+      "score": 0.8401,
+      "flowAccumulation": 15,
+      "convergence": 1.0,
+      "localRelief": 5.72,
+      "relativeElevation": 0.56,
+      "distanceToChannel": 5.0,
+      "distanceToChannelMeters": 462.54,
+      "inSelectedArea": true,
+      "scoreBreakdown": {
+        "elevation": 0.439,
+        "slope": 0.584,
+        "depression": 1.0,
+        "convergence": 1.0,
+        "catchment": 0.793,
+        "channelOffset": 1.0
+      },
+      "reason": "Optimal pond site selected: ~463m safe buffer from drainage channel to prevent river inundation; natural micro-depression (5.72m depth); gentle slope; concave terrain convergence (100% surrounding higher ground); significant flow accumulation from upstream slopes (accum: 15).",
+      "pros": [
+        "Natural micro-depression (5.72m depth) minimizes excavation needs",
+        "High upstream runoff accumulation (flow accum: 15)",
+        "Safe distance (~463m) from main drainage channel prevents flood breach"
+      ],
+      "cons": [
+        "Slight terrain gradient; requires site leveling during pond bunding",
+        "Higher relative elevation compared to surrounding valley floor"
+      ],
+      "estimatedCatchmentM2": 128363.69,
+      "catchment": {
+        "polygon": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                81.30996894836423,
+                21.25742111288063
+              ],
+              [
+                81.30907630920409,
+                21.25742111288063
+              ],
+              [
+                81.30907630920409,
+                21.258301046357722
+              ],
+              [
+                81.30907630920409,
+                21.258301046357726
+              ],
+              [
+                81.30907630920409,
+                21.25918097983482
+              ],
+              [
+                81.30818367004393,
+                21.25918097983482
+              ],
+              [
+                81.30818367004393,
+                21.260060913311918
+              ],
+              [
+                81.30907630920409,
+                21.260060913311918
+              ],
+              [
+                81.30996894836423,
+                21.260060913311918
+              ],
+              [
+                81.30996894836424,
+                21.260060913311918
+              ],
+              [
+                81.31086158752439,
+                21.260060913311918
+              ],
+              [
+                81.31086158752439,
+                21.25918097983482
+              ],
+              [
+                81.31175422668454,
+                21.25918097983482
+              ],
+              [
+                81.3126468658447,
+                21.25918097983482
+              ],
+              [
+                81.3126468658447,
+                21.258301046357726
+              ],
+              [
+                81.3126468658447,
+                21.258301046357722
+              ],
+              [
+                81.3126468658447,
+                21.25742111288063
+              ],
+              [
+                81.3126468658447,
+                21.25654117940353
+              ],
+              [
+                81.3126468658447,
+                21.255661245926433
+              ],
+              [
+                81.31175422668454,
+                21.255661245926433
+              ],
+              [
+                81.31175422668454,
+                21.25654117940353
+              ],
+              [
+                81.31086158752439,
+                21.25654117940353
+              ],
+              [
+                81.30996894836423,
+                21.25654117940353
+              ],
+              [
+                81.30996894836423,
+                21.25742111288063
+              ]
+            ]
+          ]
+        },
+        "areaSquareMeters": 135763.34,
+        "areaHectares": 13.5763,
+        "areaSquareKilometers": 0.1358
+      },
+      "waterVolume": {
+        "expectedVolumeM3": 9503.43,
+        "expectedVolumeLiters": 9503430.0,
+        "expectedVolumeAcreFeet": 7.7046,
+        "rainfallMm": 100.0,
+        "runoffCoefficient": 0.7,
+        "formula": "V = Catchment Area (m\u00b2) \u00d7 Rainfall Depth (m) \u00d7 Runoff Coefficient (C)",
+        "assumptions": "Rainfall: 100.0 mm | Soil Runoff Coefficient: 0.7 (clay/loam pond basin)"
+      },
+      "expectedVolumeM3": 9503.43,
+      "catchmentAreaM2": 135763.34,
+      "catchmentAreaHectares": 13.58
+    },
+    "candidates": [
+      {
+        "id": "candidate-1",
+        "rank": 1,
+        "name": "Candidate #1 (Recommended)",
+        "isRecommended": true,
+        "latitude": 21.25874101,
+        "longitude": 81.31041527,
+        "elevation": 283.26,
+        "row": 21,
+        "col": 32,
+        "suitabilityScore": 0.8401,
+        "score": 0.8401,
+        "flowAccumulation": 15,
+        "convergence": 1.0,
+        "localRelief": 5.72,
+        "relativeElevation": 0.56,
+        "distanceToChannel": 5.0,
+        "distanceToChannelMeters": 462.54,
+        "inSelectedArea": true,
+        "scoreBreakdown": {
+          "elevation": 0.439,
+          "slope": 0.584,
+          "depression": 1.0,
+          "convergence": 1.0,
+          "catchment": 0.793,
+          "channelOffset": 1.0
+        },
+        "reason": "Optimal pond site selected: ~463m safe buffer from drainage channel to prevent river inundation; natural micro-depression (5.72m depth); gentle slope; concave terrain convergence (100% surrounding higher ground); significant flow accumulation from upstream slopes (accum: 15).",
+        "pros": [
+          "Natural micro-depression (5.72m depth) minimizes excavation needs",
+          "High upstream runoff accumulation (flow accum: 15)",
+          "Safe distance (~463m) from main drainage channel prevents flood breach"
+        ],
+        "cons": [
+          "Slight terrain gradient; requires site leveling during pond bunding",
+          "Higher relative elevation compared to surrounding valley floor"
+        ],
+        "estimatedCatchmentM2": 128363.69,
+        "catchment": {
+          "polygon": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  81.30996894836423,
+                  21.25742111288063
+                ],
+                [
+                  81.30907630920409,
+                  21.25742111288063
+                ],
+                [
+                  81.30907630920409,
+                  21.258301046357722
+                ],
+                [
+                  81.30907630920409,
+                  21.258301046357726
+                ],
+                [
+                  81.30907630920409,
+                  21.25918097983482
+                ],
+                [
+                  81.30818367004393,
+                  21.25918097983482
+                ],
+                [
+                  81.30818367004393,
+                  21.260060913311918
+                ],
+                [
+                  81.30907630920409,
+                  21.260060913311918
+                ],
+                [
+                  81.30996894836423,
+                  21.260060913311918
+                ],
+                [
+                  81.30996894836424,
+                  21.260060913311918
+                ],
+                [
+                  81.31086158752439,
+                  21.260060913311918
+                ],
+                [
+                  81.31086158752439,
+                  21.25918097983482
+                ],
+                [
+                  81.31175422668454,
+                  21.25918097983482
+                ],
+                [
+                  81.3126468658447,
+                  21.25918097983482
+                ],
+                [
+                  81.3126468658447,
+                  21.258301046357726
+                ],
+                [
+                  81.3126468658447,
+                  21.258301046357722
+                ],
+                [
+                  81.3126468658447,
+                  21.25742111288063
+                ],
+                [
+                  81.3126468658447,
+                  21.25654117940353
+                ],
+                [
+                  81.3126468658447,
+                  21.255661245926433
+                ],
+                [
+                  81.31175422668454,
+                  21.255661245926433
+                ],
+                [
+                  81.31175422668454,
+                  21.25654117940353
+                ],
+                [
+                  81.31086158752439,
+                  21.25654117940353
+                ],
+                [
+                  81.30996894836423,
+                  21.25654117940353
+                ],
+                [
+                  81.30996894836423,
+                  21.25742111288063
+                ]
+              ]
+            ]
+          },
+          "areaSquareMeters": 135763.34,
+          "areaHectares": 13.5763,
+          "areaSquareKilometers": 0.1358
+        },
+        "waterVolume": {
+          "expectedVolumeM3": 9503.43,
+          "expectedVolumeLiters": 9503430.0,
+          "expectedVolumeAcreFeet": 7.7046,
+          "rainfallMm": 100.0,
+          "runoffCoefficient": 0.7,
+          "formula": "V = Catchment Area (m\u00b2) \u00d7 Rainfall Depth (m) \u00d7 Runoff Coefficient (C)",
+          "assumptions": "Rainfall: 100.0 mm | Soil Runoff Coefficient: 0.7 (clay/loam pond basin)"
+        },
+        "expectedVolumeM3": 9503.43,
+        "catchmentAreaM2": 135763.34,
+        "catchmentAreaHectares": 13.58
+      },
+      {
+        "id": "candidate-2",
+        "rank": 2,
+        "name": "Candidate #2",
+        "isRecommended": false,
+        "latitude": 21.25962095,
+        "longitude": 81.29791832,
+        "elevation": 281.0,
+        "row": 22,
+        "col": 18,
+        "suitabilityScore": 0.8295,
+        "score": 0.8295,
+        "flowAccumulation": 10,
+        "convergence": 1.0,
+        "localRelief": 3.61,
+        "relativeElevation": 0.48,
+        "distanceToChannel": 6.24,
+        "distanceToChannelMeters": 577.43,
+        "inSelectedArea": true,
+        "scoreBreakdown": {
+          "elevation": 0.517,
+          "slope": 0.77,
+          "depression": 1.0,
+          "convergence": 1.0,
+          "catchment": 0.686,
+          "channelOffset": 0.901
+        },
+        "reason": "Optimal pond site selected: ~577m safe buffer from drainage channel to prevent river inundation; natural micro-depression (3.61m depth); low terrain gradient (<3% slope); concave terrain convergence (100% surrounding higher ground); moderate valley elevation.",
+        "pros": [
+          "Natural micro-depression (3.61m depth) minimizes excavation needs",
+          "Moderate upstream catchment runoff (flow accum: 10)",
+          "Safe distance (~577m) from main drainage channel prevents flood breach",
+          "Low terrain slope (<3%) provides high pond bank stability"
+        ],
+        "cons": [],
+        "estimatedCatchmentM2": 85575.8,
+        "catchment": {
+          "polygon": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  81.29836463928223,
+                  21.258301046357722
+                ],
+                [
+                  81.29836463928223,
+                  21.258301046357726
+                ],
+                [
+                  81.29836463928223,
+                  21.25918097983482
+                ],
+                [
+                  81.29747200012208,
+                  21.25918097983482
+                ],
+                [
+                  81.29747200012207,
+                  21.25918097983482
+                ],
+                [
+                  81.29657936096193,
+                  21.25918097983482
+                ],
+                [
+                  81.29657936096193,
+                  21.260060913311914
+                ],
+                [
+                  81.29657936096193,
+                  21.260060913311918
+                ],
+                [
+                  81.29657936096193,
+                  21.260940846789012
+                ],
+                [
+                  81.29747200012207,
+                  21.260940846789012
+                ],
+                [
+                  81.29747200012208,
+                  21.260940846789012
+                ],
+                [
+                  81.29836463928223,
+                  21.260940846789012
+                ],
+                [
+                  81.29836463928223,
+                  21.26182078026611
+                ],
+                [
+                  81.29925727844238,
+                  21.26182078026611
+                ],
+                [
+                  81.30014991760254,
+                  21.26182078026611
+                ],
+                [
+                  81.30014991760254,
+                  21.260940846789012
+                ],
+                [
+                  81.29925727844238,
+                  21.260940846789012
+                ],
+                [
+                  81.29925727844238,
+                  21.260060913311918
+                ],
+                [
+                  81.29925727844238,
+                  21.260060913311914
+                ],
+                [
+                  81.29925727844238,
+                  21.25918097983482
+                ],
+                [
+                  81.29925727844238,
+                  21.258301046357726
+                ],
+                [
+                  81.29925727844238,
+                  21.258301046357722
+                ],
+                [
+                  81.29925727844238,
+                  21.25742111288063
+                ],
+                [
+                  81.29836463928223,
+                  21.25742111288063
+                ],
+                [
+                  81.29836463928223,
+                  21.258301046357722
+                ]
+              ]
+            ]
+          },
+          "areaSquareMeters": 90507.78,
+          "areaHectares": 9.0508,
+          "areaSquareKilometers": 0.0905
+        },
+        "waterVolume": {
+          "expectedVolumeM3": 6335.54,
+          "expectedVolumeLiters": 6335540.0,
+          "expectedVolumeAcreFeet": 5.1363,
+          "rainfallMm": 100.0,
+          "runoffCoefficient": 0.7,
+          "formula": "V = Catchment Area (m\u00b2) \u00d7 Rainfall Depth (m) \u00d7 Runoff Coefficient (C)",
+          "assumptions": "Rainfall: 100.0 mm | Soil Runoff Coefficient: 0.7 (clay/loam pond basin)"
+        },
+        "expectedVolumeM3": 6335.54,
+        "catchmentAreaM2": 90507.78,
+        "catchmentAreaHectares": 9.05
+      },
+      {
+        "id": "candidate-3",
+        "rank": 3,
+        "name": "Candidate #3",
+        "isRecommended": false,
+        "latitude": 21.25786108,
+        "longitude": 81.29434776,
+        "elevation": 279.09,
+        "row": 20,
+        "col": 14,
+        "suitabilityScore": 0.8196,
+        "score": 0.8196,
+        "flowAccumulation": 13,
+        "convergence": 1.0,
+        "localRelief": 3.47,
+        "relativeElevation": 0.42,
+        "distanceToChannel": 7.83,
+        "distanceToChannelMeters": 724.15,
+        "inSelectedArea": true,
+        "scoreBreakdown": {
+          "elevation": 0.583,
+          "slope": 0.779,
+          "depression": 1.0,
+          "convergence": 1.0,
+          "catchment": 0.755,
+          "channelOffset": 0.774
+        },
+        "reason": "Optimal pond site selected: ~724m safe buffer from drainage channel to prevent river inundation; natural micro-depression (3.47m depth); low terrain gradient (<3% slope); concave terrain convergence (100% surrounding higher ground); significant flow accumulation from upstream slopes (accum: 13); moderate valley elevation.",
+        "pros": [
+          "Natural micro-depression (3.47m depth) minimizes excavation needs",
+          "High upstream runoff accumulation (flow accum: 13)",
+          "Safe distance (~724m) from main drainage channel prevents flood breach",
+          "Low terrain slope (<3%) provides high pond bank stability"
+        ],
+        "cons": [],
+        "estimatedCatchmentM2": 111248.53,
+        "catchment": {
+          "polygon": {
+            "type": "MultiPolygon",
+            "coordinates": [
+              [
+                [
+                  [
+                    81.29211616516115,
+                    21.25742111288063
+                  ],
+                  [
+                    81.29211616516115,
+                    21.258301046357726
+                  ],
+                  [
+                    81.2930088043213,
+                    21.258301046357726
+                  ],
+                  [
+                    81.29390144348146,
+                    21.258301046357726
+                  ],
+                  [
+                    81.29390144348146,
+                    21.25918097983482
+                  ],
+                  [
+                    81.29479408264162,
+                    21.25918097983482
+                  ],
+                  [
+                    81.29568672180177,
+                    21.25918097983482
+                  ],
+                  [
+                    81.29568672180177,
+                    21.258301046357726
+                  ],
+                  [
+                    81.29568672180177,
+                    21.258301046357722
+                  ],
+                  [
+                    81.29568672180177,
+                    21.25742111288063
+                  ],
+                  [
+                    81.29568672180177,
+                    21.25654117940353
+                  ],
+                  [
+                    81.29479408264162,
+                    21.25654117940353
+                  ],
+                  [
+                    81.29390144348146,
+                    21.25654117940353
+                  ],
+                  [
+                    81.29390144348146,
+                    21.255661245926433
+                  ],
+                  [
+                    81.2930088043213,
+                    21.255661245926433
+                  ],
+                  [
+                    81.29211616516115,
+                    21.255661245926433
+                  ],
+                  [
+                    81.29211616516115,
+                    21.25654117940353
+                  ],
+                  [
+                    81.29211616516115,
+                    21.25742111288063
+                  ]
+                ]
+              ],
+              [
+                [
+                  [
+                    81.29568672180177,
+                    21.25918097983482
+                  ],
+                  [
+                    81.29568672180177,
+                    21.260060913311918
+                  ],
+                  [
+                    81.29657936096193,
+                    21.260060913311918
+                  ],
+                  [
+                    81.29657936096193,
+                    21.25918097983482
+                  ],
+                  [
+                    81.29568672180177,
+                    21.25918097983482
+                  ]
+                ]
+              ]
+            ]
+          },
+          "areaSquareMeters": 117662.01,
+          "areaHectares": 11.7662,
+          "areaSquareKilometers": 0.1177
+        },
+        "waterVolume": {
+          "expectedVolumeM3": 8236.34,
+          "expectedVolumeLiters": 8236340.0,
+          "expectedVolumeAcreFeet": 6.6773,
+          "rainfallMm": 100.0,
+          "runoffCoefficient": 0.7,
+          "formula": "V = Catchment Area (m\u00b2) \u00d7 Rainfall Depth (m) \u00d7 Runoff Coefficient (C)",
+          "assumptions": "Rainfall: 100.0 mm | Soil Runoff Coefficient: 0.7 (clay/loam pond basin)"
+        },
+        "expectedVolumeM3": 8236.34,
+        "catchmentAreaM2": 117662.01,
+        "catchmentAreaHectares": 11.77
+      },
+      {
+        "id": "candidate-4",
+        "rank": 4,
+        "name": "Candidate #4",
+        "isRecommended": false,
+        "latitude": 21.24818181,
+        "longitude": 81.29702568,
+        "elevation": 279.0,
+        "row": 9,
+        "col": 17,
+        "suitabilityScore": 0.8163,
+        "score": 0.8163,
+        "flowAccumulation": 10,
+        "convergence": 1.0,
+        "localRelief": 4.11,
+        "relativeElevation": 0.41,
+        "distanceToChannel": 4.41,
+        "distanceToChannelMeters": 408.33,
+        "inSelectedArea": true,
+        "scoreBreakdown": {
+          "elevation": 0.586,
+          "slope": 0.666,
+          "depression": 1.0,
+          "convergence": 1.0,
+          "catchment": 0.686,
+          "channelOffset": 0.883
+        },
+        "reason": "Optimal pond site selected: ~408m safe buffer from drainage channel to prevent river inundation; natural micro-depression (4.11m depth); gentle slope; concave terrain convergence (100% surrounding higher ground); moderate valley elevation.",
+        "pros": [
+          "Natural micro-depression (4.11m depth) minimizes excavation needs",
+          "Moderate upstream catchment runoff (flow accum: 10)",
+          "Safe distance (~408m) from main drainage channel prevents flood breach",
+          "Low terrain slope (<3%) provides high pond bank stability"
+        ],
+        "cons": [],
+        "estimatedCatchmentM2": 85575.8,
+        "catchment": {
+          "polygon": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  81.29747200012208,
+                  21.24686191115547
+                ],
+                [
+                  81.29747200012207,
+                  21.24686191115547
+                ],
+                [
+                  81.29657936096193,
+                  21.24686191115547
+                ],
+                [
+                  81.29657936096193,
+                  21.247741844632568
+                ],
+                [
+                  81.29568672180177,
+                  21.247741844632568
+                ],
+                [
+                  81.29568672180177,
+                  21.248621778109662
+                ],
+                [
+                  81.29568672180177,
+                  21.248621778109666
+                ],
+                [
+                  81.29568672180177,
+                  21.24950171158676
+                ],
+                [
+                  81.29657936096193,
+                  21.24950171158676
+                ],
+                [
+                  81.29747200012207,
+                  21.24950171158676
+                ],
+                [
+                  81.29747200012208,
+                  21.24950171158676
+                ],
+                [
+                  81.29836463928223,
+                  21.24950171158676
+                ],
+                [
+                  81.29925727844238,
+                  21.24950171158676
+                ],
+                [
+                  81.29925727844238,
+                  21.248621778109666
+                ],
+                [
+                  81.29925727844238,
+                  21.248621778109662
+                ],
+                [
+                  81.29925727844238,
+                  21.247741844632568
+                ],
+                [
+                  81.29836463928223,
+                  21.247741844632568
+                ],
+                [
+                  81.29836463928223,
+                  21.24686191115547
+                ],
+                [
+                  81.29747200012208,
+                  21.24686191115547
+                ]
+              ]
+            ]
+          },
+          "areaSquareMeters": 90514.91,
+          "areaHectares": 9.0515,
+          "areaSquareKilometers": 0.0905
+        },
+        "waterVolume": {
+          "expectedVolumeM3": 6336.04,
+          "expectedVolumeLiters": 6336040.0,
+          "expectedVolumeAcreFeet": 5.1367,
+          "rainfallMm": 100.0,
+          "runoffCoefficient": 0.7,
+          "formula": "V = Catchment Area (m\u00b2) \u00d7 Rainfall Depth (m) \u00d7 Runoff Coefficient (C)",
+          "assumptions": "Rainfall: 100.0 mm | Soil Runoff Coefficient: 0.7 (clay/loam pond basin)"
+        },
+        "expectedVolumeM3": 6336.04,
+        "catchmentAreaM2": 90514.91,
+        "catchmentAreaHectares": 9.05
+      },
+      {
+        "id": "candidate-5",
+        "rank": 5,
+        "name": "Candidate #5",
+        "isRecommended": false,
+        "latitude": 21.24378214,
+        "longitude": 81.29613304,
+        "elevation": 280.0,
+        "row": 4,
+        "col": 16,
+        "suitabilityScore": 0.8162,
+        "score": 0.8162,
+        "flowAccumulation": 10,
+        "convergence": 1.0,
+        "localRelief": 4.06,
+        "relativeElevation": 0.45,
+        "distanceToChannel": 6.0,
+        "distanceToChannelMeters": 555.04,
+        "inSelectedArea": true,
+        "scoreBreakdown": {
+          "elevation": 0.552,
+          "slope": 0.626,
+          "depression": 1.0,
+          "convergence": 1.0,
+          "catchment": 0.686,
+          "channelOffset": 0.92
+        },
+        "reason": "Optimal pond site selected: ~555m safe buffer from drainage channel to prevent river inundation; natural micro-depression (4.06m depth); gentle slope; concave terrain convergence (100% surrounding higher ground); moderate valley elevation.",
+        "pros": [
+          "Natural micro-depression (4.06m depth) minimizes excavation needs",
+          "Moderate upstream catchment runoff (flow accum: 10)",
+          "Safe distance (~555m) from main drainage channel prevents flood breach"
+        ],
+        "cons": [
+          "Slight terrain gradient; requires site leveling during pond bunding"
+        ],
+        "estimatedCatchmentM2": 85575.8,
+        "catchment": {
+          "polygon": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  81.29479408264162,
+                  21.24422211072418
+                ],
+                [
+                  81.29479408264162,
+                  21.244222110724184
+                ],
+                [
+                  81.29479408264162,
+                  21.24510204420128
+                ],
+                [
+                  81.29568672180177,
+                  21.24510204420128
+                ],
+                [
+                  81.29657936096193,
+                  21.24510204420128
+                ],
+                [
+                  81.29747200012207,
+                  21.24510204420128
+                ],
+                [
+                  81.29747200012208,
+                  21.24510204420128
+                ],
+                [
+                  81.29836463928223,
+                  21.24510204420128
+                ],
+                [
+                  81.29836463928223,
+                  21.244222110724184
+                ],
+                [
+                  81.29836463928223,
+                  21.24422211072418
+                ],
+                [
+                  81.29836463928223,
+                  21.243342177247087
+                ],
+                [
+                  81.29747200012208,
+                  21.243342177247087
+                ],
+                [
+                  81.29747200012207,
+                  21.243342177247087
+                ],
+                [
+                  81.29657936096193,
+                  21.243342177247087
+                ],
+                [
+                  81.29657936096193,
+                  21.24246224376999
+                ],
+                [
+                  81.29568672180177,
+                  21.24246224376999
+                ],
+                [
+                  81.29479408264162,
+                  21.24246224376999
+                ],
+                [
+                  81.29479408264162,
+                  21.243342177247087
+                ],
+                [
+                  81.29479408264162,
+                  21.24422211072418
+                ]
+              ]
+            ]
+          },
+          "areaSquareMeters": 90517.62,
+          "areaHectares": 9.0518,
+          "areaSquareKilometers": 0.0905
+        },
+        "waterVolume": {
+          "expectedVolumeM3": 6336.23,
+          "expectedVolumeLiters": 6336230.0,
+          "expectedVolumeAcreFeet": 5.1369,
+          "rainfallMm": 100.0,
+          "runoffCoefficient": 0.7,
+          "formula": "V = Catchment Area (m\u00b2) \u00d7 Rainfall Depth (m) \u00d7 Runoff Coefficient (C)",
+          "assumptions": "Rainfall: 100.0 mm | Soil Runoff Coefficient: 0.7 (clay/loam pond basin)"
+        },
+        "expectedVolumeM3": 6336.23,
+        "catchmentAreaM2": 90517.62,
+        "catchmentAreaHectares": 9.05
+      }
+    ],
+    "pondCandidates": [
+      {
+        "id": "candidate-1",
+        "rank": 1,
+        "name": "Candidate #1 (Recommended)",
+        "isRecommended": true,
+        "latitude": 21.25874101,
+        "longitude": 81.31041527,
+        "elevation": 283.26,
+        "row": 21,
+        "col": 32,
+        "suitabilityScore": 0.8401,
+        "score": 0.8401,
+        "flowAccumulation": 15,
+        "convergence": 1.0,
+        "localRelief": 5.72,
+        "relativeElevation": 0.56,
+        "distanceToChannel": 5.0,
+        "distanceToChannelMeters": 462.54,
+        "inSelectedArea": true,
+        "scoreBreakdown": {
+          "elevation": 0.439,
+          "slope": 0.584,
+          "depression": 1.0,
+          "convergence": 1.0,
+          "catchment": 0.793,
+          "channelOffset": 1.0
+        },
+        "reason": "Optimal pond site selected: ~463m safe buffer from drainage channel to prevent river inundation; natural micro-depression (5.72m depth); gentle slope; concave terrain convergence (100% surrounding higher ground); significant flow accumulation from upstream slopes (accum: 15).",
+        "pros": [
+          "Natural micro-depression (5.72m depth) minimizes excavation needs",
+          "High upstream runoff accumulation (flow accum: 15)",
+          "Safe distance (~463m) from main drainage channel prevents flood breach"
+        ],
+        "cons": [
+          "Slight terrain gradient; requires site leveling during pond bunding",
+          "Higher relative elevation compared to surrounding valley floor"
+        ],
+        "estimatedCatchmentM2": 128363.69,
+        "catchment": {
+          "polygon": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  81.30996894836423,
+                  21.25742111288063
+                ],
+                [
+                  81.30907630920409,
+                  21.25742111288063
+                ],
+                [
+                  81.30907630920409,
+                  21.258301046357722
+                ],
+                [
+                  81.30907630920409,
+                  21.258301046357726
+                ],
+                [
+                  81.30907630920409,
+                  21.25918097983482
+                ],
+                [
+                  81.30818367004393,
+                  21.25918097983482
+                ],
+                [
+                  81.30818367004393,
+                  21.260060913311918
+                ],
+                [
+                  81.30907630920409,
+                  21.260060913311918
+                ],
+                [
+                  81.30996894836423,
+                  21.260060913311918
+                ],
+                [
+                  81.30996894836424,
+                  21.260060913311918
+                ],
+                [
+                  81.31086158752439,
+                  21.260060913311918
+                ],
+                [
+                  81.31086158752439,
+                  21.25918097983482
+                ],
+                [
+                  81.31175422668454,
+                  21.25918097983482
+                ],
+                [
+                  81.3126468658447,
+                  21.25918097983482
+                ],
+                [
+                  81.3126468658447,
+                  21.258301046357726
+                ],
+                [
+                  81.3126468658447,
+                  21.258301046357722
+                ],
+                [
+                  81.3126468658447,
+                  21.25742111288063
+                ],
+                [
+                  81.3126468658447,
+                  21.25654117940353
+                ],
+                [
+                  81.3126468658447,
+                  21.255661245926433
+                ],
+                [
+                  81.31175422668454,
+                  21.255661245926433
+                ],
+                [
+                  81.31175422668454,
+                  21.25654117940353
+                ],
+                [
+                  81.31086158752439,
+                  21.25654117940353
+                ],
+                [
+                  81.30996894836423,
+                  21.25654117940353
+                ],
+                [
+                  81.30996894836423,
+                  21.25742111288063
+                ]
+              ]
+            ]
+          },
+          "areaSquareMeters": 135763.34,
+          "areaHectares": 13.5763,
+          "areaSquareKilometers": 0.1358
+        },
+        "waterVolume": {
+          "expectedVolumeM3": 9503.43,
+          "expectedVolumeLiters": 9503430.0,
+          "expectedVolumeAcreFeet": 7.7046,
+          "rainfallMm": 100.0,
+          "runoffCoefficient": 0.7,
+          "formula": "V = Catchment Area (m\u00b2) \u00d7 Rainfall Depth (m) \u00d7 Runoff Coefficient (C)",
+          "assumptions": "Rainfall: 100.0 mm | Soil Runoff Coefficient: 0.7 (clay/loam pond basin)"
+        },
+        "expectedVolumeM3": 9503.43,
+        "catchmentAreaM2": 135763.34,
+        "catchmentAreaHectares": 13.58
+      },
+      {
+        "id": "candidate-2",
+        "rank": 2,
+        "name": "Candidate #2",
+        "isRecommended": false,
+        "latitude": 21.25962095,
+        "longitude": 81.29791832,
+        "elevation": 281.0,
+        "row": 22,
+        "col": 18,
+        "suitabilityScore": 0.8295,
+        "score": 0.8295,
+        "flowAccumulation": 10,
+        "convergence": 1.0,
+        "localRelief": 3.61,
+        "relativeElevation": 0.48,
+        "distanceToChannel": 6.24,
+        "distanceToChannelMeters": 577.43,
+        "inSelectedArea": true,
+        "scoreBreakdown": {
+          "elevation": 0.517,
+          "slope": 0.77,
+          "depression": 1.0,
+          "convergence": 1.0,
+          "catchment": 0.686,
+          "channelOffset": 0.901
+        },
+        "reason": "Optimal pond site selected: ~577m safe buffer from drainage channel to prevent river inundation; natural micro-depression (3.61m depth); low terrain gradient (<3% slope); concave terrain convergence (100% surrounding higher ground); moderate valley elevation.",
+        "pros": [
+          "Natural micro-depression (3.61m depth) minimizes excavation needs",
+          "Moderate upstream catchment runoff (flow accum: 10)",
+          "Safe distance (~577m) from main drainage channel prevents flood breach",
+          "Low terrain slope (<3%) provides high pond bank stability"
+        ],
+        "cons": [],
+        "estimatedCatchmentM2": 85575.8,
+        "catchment": {
+          "polygon": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  81.29836463928223,
+                  21.258301046357722
+                ],
+                [
+                  81.29836463928223,
+                  21.258301046357726
+                ],
+                [
+                  81.29836463928223,
+                  21.25918097983482
+                ],
+                [
+                  81.29747200012208,
+                  21.25918097983482
+                ],
+                [
+                  81.29747200012207,
+                  21.25918097983482
+                ],
+                [
+                  81.29657936096193,
+                  21.25918097983482
+                ],
+                [
+                  81.29657936096193,
+                  21.260060913311914
+                ],
+                [
+                  81.29657936096193,
+                  21.260060913311918
+                ],
+                [
+                  81.29657936096193,
+                  21.260940846789012
+                ],
+                [
+                  81.29747200012207,
+                  21.260940846789012
+                ],
+                [
+                  81.29747200012208,
+                  21.260940846789012
+                ],
+                [
+                  81.29836463928223,
+                  21.260940846789012
+                ],
+                [
+                  81.29836463928223,
+                  21.26182078026611
+                ],
+                [
+                  81.29925727844238,
+                  21.26182078026611
+                ],
+                [
+                  81.30014991760254,
+                  21.26182078026611
+                ],
+                [
+                  81.30014991760254,
+                  21.260940846789012
+                ],
+                [
+                  81.29925727844238,
+                  21.260940846789012
+                ],
+                [
+                  81.29925727844238,
+                  21.260060913311918
+                ],
+                [
+                  81.29925727844238,
+                  21.260060913311914
+                ],
+                [
+                  81.29925727844238,
+                  21.25918097983482
+                ],
+                [
+                  81.29925727844238,
+                  21.258301046357726
+                ],
+                [
+                  81.29925727844238,
+                  21.258301046357722
+                ],
+                [
+                  81.29925727844238,
+                  21.25742111288063
+                ],
+                [
+                  81.29836463928223,
+                  21.25742111288063
+                ],
+                [
+                  81.29836463928223,
+                  21.258301046357722
+                ]
+              ]
+            ]
+          },
+          "areaSquareMeters": 90507.78,
+          "areaHectares": 9.0508,
+          "areaSquareKilometers": 0.0905
+        },
+        "waterVolume": {
+          "expectedVolumeM3": 6335.54,
+          "expectedVolumeLiters": 6335540.0,
+          "expectedVolumeAcreFeet": 5.1363,
+          "rainfallMm": 100.0,
+          "runoffCoefficient": 0.7,
+          "formula": "V = Catchment Area (m\u00b2) \u00d7 Rainfall Depth (m) \u00d7 Runoff Coefficient (C)",
+          "assumptions": "Rainfall: 100.0 mm | Soil Runoff Coefficient: 0.7 (clay/loam pond basin)"
+        },
+        "expectedVolumeM3": 6335.54,
+        "catchmentAreaM2": 90507.78,
+        "catchmentAreaHectares": 9.05
+      },
+      {
+        "id": "candidate-3",
+        "rank": 3,
+        "name": "Candidate #3",
+        "isRecommended": false,
+        "latitude": 21.25786108,
+        "longitude": 81.29434776,
+        "elevation": 279.09,
+        "row": 20,
+        "col": 14,
+        "suitabilityScore": 0.8196,
+        "score": 0.8196,
+        "flowAccumulation": 13,
+        "convergence": 1.0,
+        "localRelief": 3.47,
+        "relativeElevation": 0.42,
+        "distanceToChannel": 7.83,
+        "distanceToChannelMeters": 724.15,
+        "inSelectedArea": true,
+        "scoreBreakdown": {
+          "elevation": 0.583,
+          "slope": 0.779,
+          "depression": 1.0,
+          "convergence": 1.0,
+          "catchment": 0.755,
+          "channelOffset": 0.774
+        },
+        "reason": "Optimal pond site selected: ~724m safe buffer from drainage channel to prevent river inundation; natural micro-depression (3.47m depth); low terrain gradient (<3% slope); concave terrain convergence (100% surrounding higher ground); significant flow accumulation from upstream slopes (accum: 13); moderate valley elevation.",
+        "pros": [
+          "Natural micro-depression (3.47m depth) minimizes excavation needs",
+          "High upstream runoff accumulation (flow accum: 13)",
+          "Safe distance (~724m) from main drainage channel prevents flood breach",
+          "Low terrain slope (<3%) provides high pond bank stability"
+        ],
+        "cons": [],
+        "estimatedCatchmentM2": 111248.53,
+        "catchment": {
+          "polygon": {
+            "type": "MultiPolygon",
+            "coordinates": [
+              [
+                [
+                  [
+                    81.29211616516115,
+                    21.25742111288063
+                  ],
+                  [
+                    81.29211616516115,
+                    21.258301046357726
+                  ],
+                  [
+                    81.2930088043213,
+                    21.258301046357726
+                  ],
+                  [
+                    81.29390144348146,
+                    21.258301046357726
+                  ],
+                  [
+                    81.29390144348146,
+                    21.25918097983482
+                  ],
+                  [
+                    81.29479408264162,
+                    21.25918097983482
+                  ],
+                  [
+                    81.29568672180177,
+                    21.25918097983482
+                  ],
+                  [
+                    81.29568672180177,
+                    21.258301046357726
+                  ],
+                  [
+                    81.29568672180177,
+                    21.258301046357722
+                  ],
+                  [
+                    81.29568672180177,
+                    21.25742111288063
+                  ],
+                  [
+                    81.29568672180177,
+                    21.25654117940353
+                  ],
+                  [
+                    81.29479408264162,
+                    21.25654117940353
+                  ],
+                  [
+                    81.29390144348146,
+                    21.25654117940353
+                  ],
+                  [
+                    81.29390144348146,
+                    21.255661245926433
+                  ],
+                  [
+                    81.2930088043213,
+                    21.255661245926433
+                  ],
+                  [
+                    81.29211616516115,
+                    21.255661245926433
+                  ],
+                  [
+                    81.29211616516115,
+                    21.25654117940353
+                  ],
+                  [
+                    81.29211616516115,
+                    21.25742111288063
+                  ]
+                ]
+              ],
+              [
+                [
+                  [
+                    81.29568672180177,
+                    21.25918097983482
+                  ],
+                  [
+                    81.29568672180177,
+                    21.260060913311918
+                  ],
+                  [
+                    81.29657936096193,
+                    21.260060913311918
+                  ],
+                  [
+                    81.29657936096193,
+                    21.25918097983482
+                  ],
+                  [
+                    81.29568672180177,
+                    21.25918097983482
+                  ]
+                ]
+              ]
+            ]
+          },
+          "areaSquareMeters": 117662.01,
+          "areaHectares": 11.7662,
+          "areaSquareKilometers": 0.1177
+        },
+        "waterVolume": {
+          "expectedVolumeM3": 8236.34,
+          "expectedVolumeLiters": 8236340.0,
+          "expectedVolumeAcreFeet": 6.6773,
+          "rainfallMm": 100.0,
+          "runoffCoefficient": 0.7,
+          "formula": "V = Catchment Area (m\u00b2) \u00d7 Rainfall Depth (m) \u00d7 Runoff Coefficient (C)",
+          "assumptions": "Rainfall: 100.0 mm | Soil Runoff Coefficient: 0.7 (clay/loam pond basin)"
+        },
+        "expectedVolumeM3": 8236.34,
+        "catchmentAreaM2": 117662.01,
+        "catchmentAreaHectares": 11.77
+      },
+      {
+        "id": "candidate-4",
+        "rank": 4,
+        "name": "Candidate #4",
+        "isRecommended": false,
+        "latitude": 21.24818181,
+        "longitude": 81.29702568,
+        "elevation": 279.0,
+        "row": 9,
+        "col": 17,
+        "suitabilityScore": 0.8163,
+        "score": 0.8163,
+        "flowAccumulation": 10,
+        "convergence": 1.0,
+        "localRelief": 4.11,
+        "relativeElevation": 0.41,
+        "distanceToChannel": 4.41,
+        "distanceToChannelMeters": 408.33,
+        "inSelectedArea": true,
+        "scoreBreakdown": {
+          "elevation": 0.586,
+          "slope": 0.666,
+          "depression": 1.0,
+          "convergence": 1.0,
+          "catchment": 0.686,
+          "channelOffset": 0.883
+        },
+        "reason": "Optimal pond site selected: ~408m safe buffer from drainage channel to prevent river inundation; natural micro-depression (4.11m depth); gentle slope; concave terrain convergence (100% surrounding higher ground); moderate valley elevation.",
+        "pros": [
+          "Natural micro-depression (4.11m depth) minimizes excavation needs",
+          "Moderate upstream catchment runoff (flow accum: 10)",
+          "Safe distance (~408m) from main drainage channel prevents flood breach",
+          "Low terrain slope (<3%) provides high pond bank stability"
+        ],
+        "cons": [],
+        "estimatedCatchmentM2": 85575.8,
+        "catchment": {
+          "polygon": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  81.29747200012208,
+                  21.24686191115547
+                ],
+                [
+                  81.29747200012207,
+                  21.24686191115547
+                ],
+                [
+                  81.29657936096193,
+                  21.24686191115547
+                ],
+                [
+                  81.29657936096193,
+                  21.247741844632568
+                ],
+                [
+                  81.29568672180177,
+                  21.247741844632568
+                ],
+                [
+                  81.29568672180177,
+                  21.248621778109662
+                ],
+                [
+                  81.29568672180177,
+                  21.248621778109666
+                ],
+                [
+                  81.29568672180177,
+                  21.24950171158676
+                ],
+                [
+                  81.29657936096193,
+                  21.24950171158676
+                ],
+                [
+                  81.29747200012207,
+                  21.24950171158676
+                ],
+                [
+                  81.29747200012208,
+                  21.24950171158676
+                ],
+                [
+                  81.29836463928223,
+                  21.24950171158676
+                ],
+                [
+                  81.29925727844238,
+                  21.24950171158676
+                ],
+                [
+                  81.29925727844238,
+                  21.248621778109666
+                ],
+                [
+                  81.29925727844238,
+                  21.248621778109662
+                ],
+                [
+                  81.29925727844238,
+                  21.247741844632568
+                ],
+                [
+                  81.29836463928223,
+                  21.247741844632568
+                ],
+                [
+                  81.29836463928223,
+                  21.24686191115547
+                ],
+                [
+                  81.29747200012208,
+                  21.24686191115547
+                ]
+              ]
+            ]
+          },
+          "areaSquareMeters": 90514.91,
+          "areaHectares": 9.0515,
+          "areaSquareKilometers": 0.0905
+        },
+        "waterVolume": {
+          "expectedVolumeM3": 6336.04,
+          "expectedVolumeLiters": 6336040.0,
+          "expectedVolumeAcreFeet": 5.1367,
+          "rainfallMm": 100.0,
+          "runoffCoefficient": 0.7,
+          "formula": "V = Catchment Area (m\u00b2) \u00d7 Rainfall Depth (m) \u00d7 Runoff Coefficient (C)",
+          "assumptions": "Rainfall: 100.0 mm | Soil Runoff Coefficient: 0.7 (clay/loam pond basin)"
+        },
+        "expectedVolumeM3": 6336.04,
+        "catchmentAreaM2": 90514.91,
+        "catchmentAreaHectares": 9.05
+      },
+      {
+        "id": "candidate-5",
+        "rank": 5,
+        "name": "Candidate #5",
+        "isRecommended": false,
+        "latitude": 21.24378214,
+        "longitude": 81.29613304,
+        "elevation": 280.0,
+        "row": 4,
+        "col": 16,
+        "suitabilityScore": 0.8162,
+        "score": 0.8162,
+        "flowAccumulation": 10,
+        "convergence": 1.0,
+        "localRelief": 4.06,
+        "relativeElevation": 0.45,
+        "distanceToChannel": 6.0,
+        "distanceToChannelMeters": 555.04,
+        "inSelectedArea": true,
+        "scoreBreakdown": {
+          "elevation": 0.552,
+          "slope": 0.626,
+          "depression": 1.0,
+          "convergence": 1.0,
+          "catchment": 0.686,
+          "channelOffset": 0.92
+        },
+        "reason": "Optimal pond site selected: ~555m safe buffer from drainage channel to prevent river inundation; natural micro-depression (4.06m depth); gentle slope; concave terrain convergence (100% surrounding higher ground); moderate valley elevation.",
+        "pros": [
+          "Natural micro-depression (4.06m depth) minimizes excavation needs",
+          "Moderate upstream catchment runoff (flow accum: 10)",
+          "Safe distance (~555m) from main drainage channel prevents flood breach"
+        ],
+        "cons": [
+          "Slight terrain gradient; requires site leveling during pond bunding"
+        ],
+        "estimatedCatchmentM2": 85575.8,
+        "catchment": {
+          "polygon": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  81.29479408264162,
+                  21.24422211072418
+                ],
+                [
+                  81.29479408264162,
+                  21.244222110724184
+                ],
+                [
+                  81.29479408264162,
+                  21.24510204420128
+                ],
+                [
+                  81.29568672180177,
+                  21.24510204420128
+                ],
+                [
+                  81.29657936096193,
+                  21.24510204420128
+                ],
+                [
+                  81.29747200012207,
+                  21.24510204420128
+                ],
+                [
+                  81.29747200012208,
+                  21.24510204420128
+                ],
+                [
+                  81.29836463928223,
+                  21.24510204420128
+                ],
+                [
+                  81.29836463928223,
+                  21.244222110724184
+                ],
+                [
+                  81.29836463928223,
+                  21.24422211072418
+                ],
+                [
+                  81.29836463928223,
+                  21.243342177247087
+                ],
+                [
+                  81.29747200012208,
+                  21.243342177247087
+                ],
+                [
+                  81.29747200012207,
+                  21.243342177247087
+                ],
+                [
+                  81.29657936096193,
+                  21.243342177247087
+                ],
+                [
+                  81.29657936096193,
+                  21.24246224376999
+                ],
+                [
+                  81.29568672180177,
+                  21.24246224376999
+                ],
+                [
+                  81.29479408264162,
+                  21.24246224376999
+                ],
+                [
+                  81.29479408264162,
+                  21.243342177247087
+                ],
+                [
+                  81.29479408264162,
+                  21.24422211072418
+                ]
+              ]
+            ]
+          },
+          "areaSquareMeters": 90517.62,
+          "areaHectares": 9.0518,
+          "areaSquareKilometers": 0.0905
+        },
+        "waterVolume": {
+          "expectedVolumeM3": 6336.23,
+          "expectedVolumeLiters": 6336230.0,
+          "expectedVolumeAcreFeet": 5.1369,
+          "rainfallMm": 100.0,
+          "runoffCoefficient": 0.7,
+          "formula": "V = Catchment Area (m\u00b2) \u00d7 Rainfall Depth (m) \u00d7 Runoff Coefficient (C)",
+          "assumptions": "Rainfall: 100.0 mm | Soil Runoff Coefficient: 0.7 (clay/loam pond basin)"
+        },
+        "expectedVolumeM3": 6336.23,
+        "catchmentAreaM2": 90517.62,
+        "catchmentAreaHectares": 9.05
+      }
+    ],
+    "catchment": {
+      "polygon": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              81.30996894836423,
+              21.25742111288063
+            ],
+            [
+              81.30907630920409,
+              21.25742111288063
+            ],
+            [
+              81.30907630920409,
+              21.258301046357722
+            ],
+            [
+              81.30907630920409,
+              21.258301046357726
+            ],
+            [
+              81.30907630920409,
+              21.25918097983482
+            ],
+            [
+              81.30818367004393,
+              21.25918097983482
+            ],
+            [
+              81.30818367004393,
+              21.260060913311918
+            ],
+            [
+              81.30907630920409,
+              21.260060913311918
+            ],
+            [
+              81.30996894836423,
+              21.260060913311918
+            ],
+            [
+              81.30996894836424,
+              21.260060913311918
+            ],
+            [
+              81.31086158752439,
+              21.260060913311918
+            ],
+            [
+              81.31086158752439,
+              21.25918097983482
+            ],
+            [
+              81.31175422668454,
+              21.25918097983482
+            ],
+            [
+              81.3126468658447,
+              21.25918097983482
+            ],
+            [
+              81.3126468658447,
+              21.258301046357726
+            ],
+            [
+              81.3126468658447,
+              21.258301046357722
+            ],
+            [
+              81.3126468658447,
+              21.25742111288063
+            ],
+            [
+              81.3126468658447,
+              21.25654117940353
+            ],
+            [
+              81.3126468658447,
+              21.255661245926433
+            ],
+            [
+              81.31175422668454,
+              21.255661245926433
+            ],
+            [
+              81.31175422668454,
+              21.25654117940353
+            ],
+            [
+              81.31086158752439,
+              21.25654117940353
+            ],
+            [
+              81.30996894836423,
+              21.25654117940353
+            ],
+            [
+              81.30996894836423,
+              21.25742111288063
+            ]
+          ]
+        ]
+      },
+      "areaSquareMeters": 135763.34,
+      "areaHectares": 13.5763,
+      "areaSquareKilometers": 0.1358
+    },
+    "waterVolume": {
+      "expectedVolumeM3": 9503.43,
+      "expectedVolumeLiters": 9503430.0,
+      "expectedVolumeAcreFeet": 7.7046,
+      "rainfallMm": 100.0,
+      "runoffCoefficient": 0.7,
+      "formula": "V = Catchment Area (m\u00b2) \u00d7 Rainfall Depth (m) \u00d7 Runoff Coefficient (C)",
+      "assumptions": "Rainfall: 100.0 mm | Soil Runoff Coefficient: 0.7 (clay/loam pond basin)"
+    },
+    "selectedArea": null
+  }
+]
