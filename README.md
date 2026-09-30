@@ -1,3 +1,13 @@
+---
+title: CSD Village Pond GIS Analysis
+emoji: 🏞️
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # CSD Assignment 1 — Interactive GIS Village Pond-Site Selection System
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
@@ -13,8 +23,8 @@
 ## 🚀 Live Production & Demo URLs
 
 - **GitHub Repository:** [https://github.com/Ayush-khelwal2003/CSD-ASSIGNMENT-1](https://github.com/Ayush-khelwal2003/CSD-ASSIGNMENT-1)
-- **Public Production HTTPS URL:** [https://714317f640b2f2.lhr.life](https://714317f640b2f2.lhr.life)
-- **Production API Health:** [https://714317f640b2f2.lhr.life/api/health](https://714317f640b2f2.lhr.life/api/health)
+- **Public Production HTTPS URL:** [https://ayushkhelwal-pond-gis.hf.space](https://ayushkhelwal-pond-gis.hf.space)
+- **Production API Health:** [https://ayushkhelwal-pond-gis.hf.space/api/health](https://ayushkhelwal-pond-gis.hf.space/api/health)
 - **Local Development URL:** `http://localhost:5000` (or `http://10.1.75.51:5000` inside campus network)
 
 ---
