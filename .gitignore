@@ -37,3 +37,6 @@ npm-debug.log*
 
 # Test coverage
 coverage/
+server.pid
+analyses_store.json
+server.log
